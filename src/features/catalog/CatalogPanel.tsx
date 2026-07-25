@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useStore, storeApi } from '../../store/store'
-import { makeMaterial, type ItemKind } from '../../types/project'
+import { makeMaterial, type ItemKind, type Vec2 } from '../../types/project'
 import { Section } from '../../app/ui'
 import {
   CATALOG,
@@ -29,6 +29,8 @@ import {
   type CatalogEntry,
 } from './catalog'
 import { polygonCentroid } from '../../geometry/vec'
+import { getFocusPoint } from '../scene/focus'
+import { clearOf } from './placement'
 
 const KIND_ICON: Partial<Record<ItemKind, LucideIcon>> = {
   sofa: Sofa,
@@ -56,8 +58,13 @@ export function CatalogPanel() {
     ? CATALOG.filter((c) => c.name.toLowerCase().includes(query))
     : CATALOG.filter((c) => c.category === cat)
 
-  function defaultPos() {
+  // Place new items where the camera is looking, so they land in view instead of
+  // in the first room (which may be off-screen entirely). Falls back to the old
+  // behaviour when the 3D view isn't mounted, e.g. while tracing a plan.
+  function defaultPos(): Vec2 {
     const p = useStore.getState().project
+    const focus = getFocusPoint()
+    if (focus) return clearOf(focus, p.items)
     return p.rooms.length > 0 ? polygonCentroid(p.rooms[0].loop) : { x: 0, z: 0 }
   }
 
@@ -156,15 +163,15 @@ export function CatalogPanel() {
           <input type="file" accept=".glb,model/gltf-binary" className="hidden" onChange={onImportGlb} />
         </label>
         <p className="mt-1 text-[11px] text-neutral-500">
-          Loads a glTF binary and places it in the first room. Adjust scale / lift on
-          the right.
+          Loads a glTF binary and places it where the camera is looking. Adjust
+          scale / lift on the right.
         </p>
       </Section>
 
       <Section title="How to place">
         <ul className="space-y-1 text-[11px] text-neutral-400">
           <li>• Drag an item into the scene to drop it precisely.</li>
-          <li>• Or click to add it to the middle of the first room.</li>
+          <li>• Or click to add it where the camera is looking.</li>
           <li>• In the scene: drag to move, switch to Rotate to spin.</li>
           <li>• Cabinets snap their back to the nearest wall.</li>
           <li>• Cmd/Ctrl+D duplicates the selected item.</li>

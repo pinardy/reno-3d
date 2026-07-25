@@ -6,6 +6,7 @@ import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
 import { useStore } from '../../store/store'
 import type { Vec2 } from '../../types/project'
 import { registerCapturer, registerHomeExporter } from './screenshot'
+import { registerFocusPicker } from './focus'
 import { DimensionLabels } from './DimensionLabels'
 import { OpeningsGroup } from './Openings'
 import { MeasureTool } from './MeasureTool'
@@ -78,13 +79,40 @@ export function SceneRoot({
         { binary: true },
       )
     })
+    registerFocusPicker(() => focusPoint())
     return () => {
       pickerRef.current = null
       registerCapturer(null)
       registerHomeExporter(null)
+      registerFocusPicker(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  /**
+   * The floor point the camera is looking at. In orbit mode that is the pivot
+   * the camera turns around, which is what panning and zooming aim at. In walk
+   * mode it is where the view direction meets the floor.
+   */
+  function focusPoint(): Vec2 | null {
+    if (useStore.getState().cameraMode === 'orbit') {
+      const target = orbitRef.current?.target as THREE.Vector3 | undefined
+      return target ? { x: target.x, z: target.z } : null
+    }
+    const dir = camera.getWorldDirection(new THREE.Vector3())
+    const hit = new THREE.Vector3()
+    const ray = new THREE.Ray(camera.position.clone(), dir)
+    const ahead = (m: number) => ({
+      x: camera.position.x + dir.x * m,
+      z: camera.position.z + dir.z * m,
+    })
+    // near the horizon the floor is hit far away (or never), which would drop the
+    // item somewhere off in the distance — keep it within arm's reach instead
+    if (!ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit))
+      return ahead(3)
+    const reach = Math.hypot(hit.x - camera.position.x, hit.z - camera.position.z)
+    return reach > 6 ? ahead(3) : { x: hit.x, z: hit.z }
+  }
 
   function intersectGround(clientX: number, clientY: number): Vec2 | null {
     const rect = gl.domElement.getBoundingClientRect()
