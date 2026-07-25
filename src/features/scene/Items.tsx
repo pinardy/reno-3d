@@ -172,6 +172,19 @@ export function ItemsGroup({
     [enabled, gizmoMode, intersectGround, orbitRef],
   )
 
+  // R3F raycasts each DOM event separately, so stopping propagation on
+  // pointerdown does not stop the click that follows it. Without this the click
+  // passes through the furniture to the room floor (which selects the room) or
+  // to the ground plane (which clears selection), instantly undoing the
+  // selection made on pointerdown.
+  const onItemClick = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      if (!enabled) return
+      e.stopPropagation()
+    },
+    [enabled],
+  )
+
   return (
     <group>
       {items.map((item) => (
@@ -180,6 +193,7 @@ export function ItemsGroup({
           item={item}
           selected={selectedItemIds.includes(item.id)}
           onDown={onItemDown}
+          onClick={onItemClick}
         />
       ))}
     </group>
@@ -192,10 +206,12 @@ const ItemView = memo(function ItemView({
   item,
   selected,
   onDown,
+  onClick,
 }: {
   item: Item
   selected: boolean
   onDown: (e: ThreeEvent<PointerEvent>, item: Item) => void
+  onClick: (e: ThreeEvent<MouseEvent>) => void
 }) {
   return (
     <group
@@ -203,6 +219,7 @@ const ItemView = memo(function ItemView({
       rotation={[0, item.rotationY, 0]}
       scale={item.scale}
       onPointerDown={(e) => onDown(e, item)}
+      onClick={onClick}
     >
       <FurnitureModel item={item} />
       {selected && <SelectionRing />}

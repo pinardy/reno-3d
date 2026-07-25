@@ -128,6 +128,9 @@ export function SceneRoot({
         receiveShadow
         onClick={(e) => {
           e.stopPropagation()
+          // a click that ends a drag (orbiting the camera, or dropping an item
+          // that snapped away from the cursor) is not a deliberate deselect
+          if (e.delta > 4) return
           useStore.getState().clearSelection()
         }}
       >
