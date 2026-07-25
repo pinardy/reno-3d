@@ -115,6 +115,7 @@ export interface Project {
   items: Item[]
   wallHeight: number // default wall height for new walls (metres)
   wallThickness: number // default wall thickness (metres)
+  orientationDeg: number // compass bearing that screen-up / plan-up faces (0 = North up)
 }
 
 // ---- defaults -------------------------------------------------------------
@@ -161,6 +162,7 @@ export function emptyProject(id: string, name = 'Untitled Home'): Project {
     items: [],
     wallHeight: DEFAULT_WALL_HEIGHT,
     wallThickness: DEFAULT_WALL_THICKNESS,
+    orientationDeg: 0,
   }
 }
 

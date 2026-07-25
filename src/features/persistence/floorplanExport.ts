@@ -205,6 +205,9 @@ export function renderFloorPlan(p: Project): string {
     ctx.fillText(`${w.toFixed(2)} × ${d.toFixed(2)} m · ${area.toFixed(1)} m²`, cx, cy + 10)
   }
 
+  // --- north arrow (respects the project orientation) ---
+  drawNorthArrow(ctx, W - 46, 46, p.orientationDeg ?? 0)
+
   // --- overall dimension lines ---
   ctx.strokeStyle = '#9aa1ab'
   ctx.fillStyle = '#3b4250'
@@ -261,6 +264,30 @@ export function renderFloorPlan(p: Project): string {
   ctx.fillText(`${barMeters} m`, bx0 + barPx / 2, by0 - 10)
 
   return canvas.toDataURL('image/png')
+}
+
+function drawNorthArrow(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  orientationDeg: number,
+) {
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.rotate((-orientationDeg * Math.PI) / 180) // North points up when orientation = 0
+  ctx.fillStyle = '#20242c'
+  ctx.beginPath()
+  ctx.moveTo(0, -18)
+  ctx.lineTo(6, 6)
+  ctx.lineTo(0, 1)
+  ctx.lineTo(-6, 6)
+  ctx.closePath()
+  ctx.fill()
+  ctx.font = '600 12px system-ui'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('N', 0, -24)
+  ctx.restore()
 }
 
 function drawDimLine(

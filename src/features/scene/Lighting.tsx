@@ -9,11 +9,16 @@ import { roomBBoxSize } from '../trace/rooms'
 export const Lighting = memo(function Lighting({ timeOfDay }: { timeOfDay: number }) {
   const rooms = useStore((s) => s.project.rooms)
   const wallHeight = useStore((s) => s.project.wallHeight)
+  const orientation = useStore((s) => s.project.orientationDeg ?? 0)
 
-  const sunAngle = (timeOfDay - 0.5) * Math.PI * 1.15
-  const elevation = Math.cos(sunAngle)
+  const elevation = Math.cos((timeOfDay - 0.5) * Math.PI * 1.15)
   const daylight = Math.max(0, elevation) // 0 at night, 1 at noon
-  const sunX = Math.sin(sunAngle) * 12
+  // sun compass bearing: sunrise East(90°) -> noon South(180°) -> sunset West(270°),
+  // mapped into world space given the plan's orientation (screen-up = -z = North).
+  const bearing = 90 + (timeOfDay - 0.25) * 360
+  const a = ((bearing - orientation) * Math.PI) / 180
+  const sunX = Math.sin(a) * 12
+  const sunZ = -Math.cos(a) * 12
   const sunY = elevation * 14
   const sunColor = mixHex('#ffcf99', '#fff6ea', daylight) // warm when low in the sky
   const artificial = 1 - Math.min(1, daylight * 1.4) // how strongly room lights are needed
@@ -21,7 +26,7 @@ export const Lighting = memo(function Lighting({ timeOfDay }: { timeOfDay: numbe
   return (
     <>
       <Sky
-        sunPosition={[sunX, sunY, 4]}
+        sunPosition={[sunX, sunY, sunZ]}
         turbidity={8}
         rayleigh={daylight < 0.35 ? 3 : 1.2}
         mieCoefficient={0.006}
@@ -29,7 +34,7 @@ export const Lighting = memo(function Lighting({ timeOfDay }: { timeOfDay: numbe
       <hemisphereLight args={['#dfe7f2', '#6a6152', 0.12 + daylight * 0.6]} />
       <ambientLight intensity={0.1 + daylight * 0.3} />
       <directionalLight
-        position={[sunX, Math.max(1, sunY), 5]}
+        position={[sunX, Math.max(1, sunY), sunZ]}
         intensity={0.15 + daylight * 2.3}
         color={sunColor}
         castShadow

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Move, RotateCw, Info, Ruler, Map, Building2, PencilRuler, Sun, SquareStack } from 'lucide-react'
 import { SceneRoot, type GroundPicker } from './SceneRoot'
+import { Compass } from './Compass'
 import { useStore, storeApi } from '../../store/store'
 import { catalogById, newItemFromCatalog } from '../catalog/catalog'
 import { makeSampleProject } from '../sample/sample'
@@ -148,6 +149,7 @@ export function DesignView() {
             className="w-24"
           />
         </div>
+        <Compass />
       </div>
 
       {/* hints */}
