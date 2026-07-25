@@ -189,6 +189,23 @@ export const CATALOG: CatalogEntry[] = [
     params: { width: 0.6, depth: 0.35, height: 0.7, doors: 2, counter: false },
   },
   {
+    id: 'corner-cabinet',
+    kind: 'cabinet',
+    name: 'Corner Cabinet (L)',
+    category: 'Kitchen',
+    size: { w: 1.0, d: 0.6, h: 0.9 },
+    material: makeMaterial({ color: '#e8e4dc', roughness: 0.4 }),
+    params: {
+      width: 1.0,
+      depth: 0.6,
+      height: 0.9,
+      doors: 1,
+      counter: true,
+      corner: true,
+      legLen: 1.0,
+    },
+  },
+  {
     id: 'fridge',
     price: 1200,
     kind: 'wardrobe',

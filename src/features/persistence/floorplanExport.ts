@@ -80,8 +80,12 @@ export function renderFloorPlan(p: Project): string {
   for (const it of p.items) {
     const entry = catalogById(it.catalogId)
     if (!entry) continue
-    const w = entry.size.w * it.scale
-    const d = entry.size.d * it.scale
+    const pn = (v: unknown, dv: number) => (typeof v === 'number' ? v : dv)
+    const isCab = entry.kind === 'cabinet'
+    const w = (isCab ? pn(it.params?.width, entry.size.w) : entry.size.w) * it.scale
+    const d = (isCab ? pn(it.params?.depth, entry.size.d) : entry.size.d) * it.scale
+    const isCorner = isCab && it.params?.corner === true
+    const legLen = pn(it.params?.legLen, 1.0) * it.scale
     const cx = X(it.position.x)
     const cy = Y(it.position.z)
     ctx.save()
@@ -92,6 +96,10 @@ export function renderFloorPlan(p: Project): string {
     ctx.lineWidth = 1.2
     ctx.beginPath()
     ctx.rect((-w / 2) * scale, (-d / 2) * scale, w * scale, d * scale)
+    if (isCorner) {
+      // return leg: matches the 3D construction (back-left, running along -z)
+      ctx.rect((-w / 2) * scale, (-d / 2) * scale, d * scale, legLen * scale)
+    }
     ctx.fill()
     ctx.stroke()
     ctx.restore()

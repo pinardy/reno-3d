@@ -522,6 +522,26 @@ function ItemInspector() {
               onChange={(e) => setParam('counter', e.target.checked)}
             />
           </label>
+          <label className="mt-1 flex items-center justify-between text-xs text-neutral-300">
+            <span className="text-neutral-400">Corner (L-shape)</span>
+            <input
+              type="checkbox"
+              checked={bool(item.params?.corner, false)}
+              onChange={(e) => setParam('corner', e.target.checked)}
+            />
+          </label>
+          {bool(item.params?.corner, false) && (
+            <Row label="Leg length">
+              <NumberInput
+                value={num(item.params?.legLen, 1.0)}
+                step={0.05}
+                min={0.3}
+                max={3}
+                suffix="m"
+                onChange={(v) => setParam('legLen', v)}
+              />
+            </Row>
+          )}
         </Section>
       )}
 

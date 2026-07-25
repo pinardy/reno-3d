@@ -27,6 +27,12 @@ describe('catalog', () => {
   it('prices are non-negative numbers', () => {
     for (const c of CATALOG) expect(catalogPrice(c)).toBeGreaterThanOrEqual(0)
   })
+  it('the corner cabinet is an L-shape with a leg length', () => {
+    const corner = catalogById('corner-cabinet')!
+    expect(corner.kind).toBe('cabinet')
+    expect(corner.params?.corner).toBe(true)
+    expect(typeof corner.params?.legLen).toBe('number')
+  })
   it('newItemFromCatalog copies material + position and lifts pendants', () => {
     const it = newItemFromCatalog(CATALOG[0], { x: 1, z: 2 })
     expect(it.position).toEqual({ x: 1, z: 2 })
