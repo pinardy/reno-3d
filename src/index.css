@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #14161a;
+  color: #e6e8ec;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+input[type='range'] {
+  accent-color: #4f8cff;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.no-scrollbar::-webkit-scrollbar-thumb {
+  background: #333844;
+  border-radius: 4px;
+}
