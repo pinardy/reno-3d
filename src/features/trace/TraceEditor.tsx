@@ -45,6 +45,10 @@ export function TraceEditor() {
   const dragRef = useRef<DragState | null>(null)
   const rafRef = useRef<number | null>(null)
 
+  // touch: track active pointers for two-finger pinch-zoom / pan
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const pinchRef = useRef<{ dist: number; cx: number; cy: number; view: View } | null>(null)
+
   // exact-length entry while tracing ("type 3.6 + Enter")
   const [dimEntry, setDimEntry] = useState<string | null>(null)
   const dimEntryRef = useRef<string | null>(null)
@@ -298,6 +302,23 @@ export function TraceEditor() {
     const rect = canvasRef.current!.getBoundingClientRect()
     const sx = e.clientX - rect.left
     const sy = e.clientY - rect.top
+
+    // two-finger touch → pinch/pan; cancel any single-finger interaction
+    pointersRef.current.set(e.pointerId, { x: sx, y: sy })
+    if (pointersRef.current.size >= 2) {
+      dragRef.current = null
+      chainRef.current = []
+      const [a, b] = [...pointersRef.current.values()]
+      pinchRef.current = {
+        dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+        cx: (a.x + b.x) / 2,
+        cy: (a.y + b.y) / 2,
+        view: viewRef.current,
+      }
+      requestRedraw()
+      return
+    }
+
     const world = getWorld(e)
     const t = toolRef.current
 
@@ -383,6 +404,23 @@ export function TraceEditor() {
     const rect = canvasRef.current!.getBoundingClientRect()
     const sx = e.clientX - rect.left
     const sy = e.clientY - rect.top
+
+    // pinch-zoom / two-finger pan
+    if (pointersRef.current.has(e.pointerId)) {
+      pointersRef.current.set(e.pointerId, { x: sx, y: sy })
+    }
+    if (pinchRef.current && pointersRef.current.size >= 2) {
+      const [a, b] = [...pointersRef.current.values()]
+      const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1
+      const cx = (a.x + b.x) / 2
+      const cy = (a.y + b.y) / 2
+      const start = pinchRef.current
+      const newZoom = Math.max(4, Math.min(400, start.view.zoom * (dist / start.dist)))
+      const world = screenToWorld(start.cx, start.cy, start.view)
+      setView({ zoom: newZoom, panX: cx - world.x * newZoom, panY: cy - world.z * newZoom })
+      return
+    }
+
     const world = getWorld(e)
     const drag = dragRef.current
 
@@ -437,6 +475,8 @@ export function TraceEditor() {
   }
 
   const onPointerUp = (e: React.PointerEvent) => {
+    pointersRef.current.delete(e.pointerId)
+    if (pointersRef.current.size < 2) pinchRef.current = null
     const drag = dragRef.current
     if ((drag?.kind === 'vertex' || drag?.kind === 'wall') && drag.preProject) {
       // the move was applied via update() (no history); record the pre-drag

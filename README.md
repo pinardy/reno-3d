@@ -47,6 +47,13 @@ Other scripts: `npm run build` (production build), `npm run preview`.
 10. **Budget** — the right panel shows per-room + total floor area with a rough reno
     estimate, plus a **furniture total** and a **shopping-list CSV export** (ballpark
     per-item prices you can replace with real quotes).
+11. **Share & export** (top bar) — a printable **PDF spec sheet** (plan + render +
+    budget), **glTF/.glb** export of the 3D model, a **share link** (design without the
+    background image), plus PNG floor plan / screenshot and `.json` import/export.
+
+Installable as a **PWA** (works offline once loaded), and the 2D editor supports
+**pinch-zoom / two-finger pan** on touch devices. New to it? The **? Help** button
+(top bar) has a guided walkthrough and shortcuts.
 10. **Save / share** — autosaves to your browser (IndexedDB). From the top bar:
     export/import `.json`, export a **top-down floor plan PNG** (map icon: walls,
     door/window symbols, room areas, furniture footprints, dimensions + scale bar),
