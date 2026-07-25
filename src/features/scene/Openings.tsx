@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { Wall, Opening } from '../../types/project'
 import { dist } from '../../geometry/vec'
 
@@ -9,7 +10,7 @@ const FRAME = { color: '#eceae4', roughness: 0.55, metalness: 0.1 }
 const WOOD = { color: '#6f4c30', roughness: 0.5, metalness: 0 }
 const BAR = 0.06
 
-export function OpeningsGroup({
+export const OpeningsGroup = memo(function OpeningsGroup({
   walls,
   openings,
   dollhouse,
@@ -48,7 +49,7 @@ export function OpeningsGroup({
       })}
     </group>
   )
-}
+})
 
 function Window({ w, h, sill, t }: { w: number; h: number; sill: number; t: number }) {
   const yC = sill + h / 2

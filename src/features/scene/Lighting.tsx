@@ -1,0 +1,73 @@
+import { memo } from 'react'
+import { Sky } from '@react-three/drei'
+import { useStore } from '../../store/store'
+import { polygonCentroid } from '../../geometry/vec'
+import { roomBBoxSize } from '../trace/rooms'
+
+// Sky + sun driven by a time-of-day value (0..1, 0.5 = midday), plus per-room
+// ceiling lights that brighten as it gets dark.
+export const Lighting = memo(function Lighting({ timeOfDay }: { timeOfDay: number }) {
+  const rooms = useStore((s) => s.project.rooms)
+  const wallHeight = useStore((s) => s.project.wallHeight)
+
+  const sunAngle = (timeOfDay - 0.5) * Math.PI * 1.15
+  const elevation = Math.cos(sunAngle)
+  const daylight = Math.max(0, elevation) // 0 at night, 1 at noon
+  const sunX = Math.sin(sunAngle) * 12
+  const sunY = elevation * 14
+  const sunColor = mixHex('#ffcf99', '#fff6ea', daylight) // warm when low in the sky
+  const artificial = 1 - Math.min(1, daylight * 1.4) // how strongly room lights are needed
+
+  return (
+    <>
+      <Sky
+        sunPosition={[sunX, sunY, 4]}
+        turbidity={8}
+        rayleigh={daylight < 0.35 ? 3 : 1.2}
+        mieCoefficient={0.006}
+      />
+      <hemisphereLight args={['#dfe7f2', '#6a6152', 0.12 + daylight * 0.6]} />
+      <ambientLight intensity={0.1 + daylight * 0.3} />
+      <directionalLight
+        position={[sunX, Math.max(1, sunY), 5]}
+        intensity={0.15 + daylight * 2.3}
+        color={sunColor}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-20}
+        shadow-camera-right={20}
+        shadow-camera-top={20}
+        shadow-camera-bottom={-20}
+        shadow-camera-far={60}
+        shadow-bias={-0.0004}
+      />
+      {artificial > 0.05 &&
+        rooms.map((r) => {
+          if (r.loop.length < 3) return null
+          const c = polygonCentroid(r.loop)
+          const { w, d } = roomBBoxSize(r.loop)
+          return (
+            <pointLight
+              key={r.id}
+              position={[c.x, wallHeight - 0.18, c.z]}
+              intensity={artificial * 6}
+              distance={Math.max(w, d) + 2.5}
+              decay={2}
+              color="#ffe4bd"
+            />
+          )
+        })}
+    </>
+  )
+})
+
+function mixHex(a: string, b: string, t: number): string {
+  const pa = parseInt(a.slice(1), 16)
+  const pb = parseInt(b.slice(1), 16)
+  const ar = pa >> 16, ag = (pa >> 8) & 0xff, ab = pa & 0xff
+  const br = pb >> 16, bg = (pb >> 8) & 0xff, bb = pb & 0xff
+  const r = Math.round(ar + (br - ar) * t)
+  const g = Math.round(ag + (bg - ag) * t)
+  const bl = Math.round(ab + (bb - ab) * t)
+  return `rgb(${r},${g},${bl})`
+}
