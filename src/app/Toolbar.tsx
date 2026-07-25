@@ -12,6 +12,7 @@ import {
   Map,
   Check,
   Cloud,
+  HelpCircle,
 } from 'lucide-react'
 import { useStore } from '../store/store'
 import { IconBtn } from './ui'
@@ -145,6 +146,10 @@ export function Toolbar() {
         onClick={() => importProjectFile().then((p) => p && loadProject(p))}
       >
         <Upload size={15} />
+      </IconBtn>
+      <div className="h-6 w-px bg-edge" />
+      <IconBtn title="Help & shortcuts" onClick={() => useStore.getState().setHelpOpen(true)}>
+        <HelpCircle size={15} />
       </IconBtn>
     </header>
   )

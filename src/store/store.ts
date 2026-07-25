@@ -27,8 +27,10 @@ interface AppState {
   selection: Selection
   cameraMode: CameraMode
   saveState: 'idle' | 'saving' | 'saved'
+  helpOpen: boolean
 
   setSaveState: (s: 'idle' | 'saving' | 'saved') => void
+  setHelpOpen: (v: boolean) => void
 
   // ----- meta / mode -----
   setEditorMode: (m: EditorMode) => void
@@ -72,8 +74,10 @@ export const useStore = create<AppState>((set, get) => ({
   selectedItemIds: [],
   cameraMode: 'orbit',
   saveState: 'idle',
+  helpOpen: false,
 
   setSaveState: (s) => set({ saveState: s }),
+  setHelpOpen: (v) => set({ helpOpen: v }),
 
   setEditorMode: (m) => set({ editorMode: m }),
   setTool: (t) =>

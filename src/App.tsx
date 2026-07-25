@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from 'react'
 import { Toolbar } from './app/Toolbar'
 import { LeftPanel } from './app/LeftPanel'
 import { RightPanel } from './app/RightPanel'
+import { HelpPanel } from './app/HelpPanel'
 import { TraceEditor } from './features/trace/TraceEditor'
 import { useStore } from './store/store'
 import { usePersistence } from './features/persistence/autosave'
@@ -21,6 +22,11 @@ export default function App() {
 
   useEffect(() => {
     document.title = 'Reno 3D — Home Designer'
+    // open the guided help on first ever visit
+    if (!localStorage.getItem('reno:onboarded')) {
+      localStorage.setItem('reno:onboarded', '1')
+      useStore.getState().setHelpOpen(true)
+    }
   }, [])
 
   return (
@@ -45,6 +51,7 @@ export default function App() {
         </main>
         <RightPanel />
       </div>
+      <HelpPanel />
     </div>
   )
 }
