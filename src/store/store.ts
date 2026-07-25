@@ -168,6 +168,25 @@ export const storeApi = {
     })
     return id
   },
+  duplicateSelectedItem() {
+    const st = useStore.getState()
+    if (st.selection.type !== 'item' || !st.selection.id) return
+    const src = st.project.items.find((i) => i.id === st.selection.id)
+    if (!src) return
+    const id = nanoid()
+    const copy: Item = {
+      ...src,
+      id,
+      position: { x: src.position.x + 0.4, z: src.position.z + 0.4 },
+      material: { ...src.material },
+      params: src.params ? { ...src.params } : undefined,
+    }
+    st.commit((p) => {
+      p.items.push(copy)
+    })
+    st.select({ type: 'item', id })
+    return id
+  },
   removeSelected() {
     const { selection, commit, clearSelection } = useStore.getState()
     if (!selection.id) return

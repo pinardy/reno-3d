@@ -27,6 +27,13 @@ export function useKeyboardShortcuts() {
         return
       }
 
+      // duplicate selected furniture
+      if (meta && e.key.toLowerCase() === 'd' && s.selection.type === 'item') {
+        e.preventDefault()
+        storeApi.duplicateSelectedItem()
+        return
+      }
+
       // delete selection
       if ((e.key === 'Delete' || e.key === 'Backspace') && s.selection.id) {
         e.preventDefault()

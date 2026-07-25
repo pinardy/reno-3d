@@ -1,4 +1,4 @@
-import { Trash2, Home } from 'lucide-react'
+import { Trash2, Home, Copy } from 'lucide-react'
 import { useStore, storeApi } from '../../store/store'
 import { Section, Row, NumberInput, TextInput } from '../../app/ui'
 import { MaterialEditor } from '../materials/MaterialEditor'
@@ -403,6 +403,13 @@ function ItemInspector() {
 
       <Section title="Material">
         <MaterialEditor material={item.material} onChange={patchMat} />
+        <button
+          type="button"
+          onClick={() => storeApi.duplicateSelectedItem()}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded bg-panel2 py-2 text-xs text-neutral-300 hover:bg-edge"
+        >
+          <Copy size={14} /> Duplicate (Cmd/Ctrl+D)
+        </button>
         <DeleteButton label="item" />
       </Section>
     </div>

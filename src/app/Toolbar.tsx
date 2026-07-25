@@ -6,7 +6,6 @@ import {
   Redo2,
   Download,
   Upload,
-  FilePlus2,
   Camera,
   Orbit,
   PersonStanding,
@@ -17,6 +16,7 @@ import { IconBtn } from './ui'
 import { exportProjectFile, importProjectFile } from '../features/persistence/io'
 import { requestScreenshot } from '../features/scene/screenshot'
 import { exportFloorPlanPNG } from '../features/persistence/floorplanExport'
+import { ProjectsMenu } from '../features/persistence/ProjectsMenu'
 
 export function Toolbar() {
   const editorMode = useStore((s) => s.editorMode)
@@ -29,7 +29,6 @@ export function Toolbar() {
   const future = useStore((s) => s.future.length)
   const name = useStore((s) => s.project.name)
   const renameProject = useStore((s) => s.renameProject)
-  const newProject = useStore((s) => s.newProject)
   const project = useStore((s) => s.project)
   const loadProject = useStore((s) => s.loadProject)
 
@@ -113,16 +112,7 @@ export function Toolbar() {
 
       <div className="h-6 w-px bg-edge" />
 
-      <IconBtn
-        title="New project"
-        onClick={() => {
-          if (confirm('Start a new empty project? Unsaved work in the current one stays autosaved under its own name.')) {
-            newProject()
-          }
-        }}
-      >
-        <FilePlus2 size={15} />
-      </IconBtn>
+      <ProjectsMenu />
       <IconBtn
         title="Export top-down floor plan (PNG)"
         onClick={() => exportFloorPlanPNG(project)}
