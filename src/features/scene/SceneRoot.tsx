@@ -8,7 +8,8 @@ import { buildWallPieces } from '../../geometry/walls'
 import { buildFloorGeometry } from '../../geometry/floor'
 import { SurfaceMaterial } from '../materials/SurfaceMaterial'
 import { FurnitureModel } from '../catalog/FurnitureModel'
-import { polygonCentroid } from '../../geometry/vec'
+import { catalogById } from '../catalog/catalog'
+import { polygonCentroid, projectOnSegment, dist } from '../../geometry/vec'
 import { registerCapturer } from './screenshot'
 import { DimensionLabels } from './DimensionLabels'
 
@@ -108,6 +109,7 @@ export function SceneRoot({
       </mesh>
 
       <WallsGroup walls={walls} openings={useStore.getState().project.openings} />
+      <CornerPosts walls={walls} />
       {rooms.map((room) => (
         <RoomFloor key={room.id} room={room} />
       ))}
@@ -176,6 +178,38 @@ function WallsGroup({ walls }: { walls: Wall[]; openings: unknown }) {
           </group>
         )
       })}
+    </group>
+  )
+}
+
+// Vertical posts at each wall endpoint fill the gaps/seams where wall boxes meet.
+function CornerPosts({ walls }: { walls: Wall[] }) {
+  const posts = useMemo(() => {
+    const vs: { x: number; z: number; thick: number; height: number; material: Wall['material'] }[] = []
+    for (const w of walls) {
+      for (const end of [w.a, w.b]) {
+        const found = vs.find(
+          (v) => Math.abs(v.x - end.x) < 0.02 && Math.abs(v.z - end.z) < 0.02,
+        )
+        if (found) {
+          found.thick = Math.max(found.thick, w.thickness)
+          found.height = Math.max(found.height, w.height)
+        } else {
+          vs.push({ x: end.x, z: end.z, thick: w.thickness, height: w.height, material: w.material })
+        }
+      }
+    }
+    return vs
+  }, [walls])
+
+  return (
+    <group>
+      {posts.map((v, i) => (
+        <mesh key={i} position={[v.x, v.height / 2, v.z]} castShadow receiveShadow>
+          <boxGeometry args={[v.thick, v.height, v.thick]} />
+          <SurfaceMaterial material={v.material} repeat={[1, Math.max(1, v.height / 2)]} />
+        </mesh>
+      ))}
     </group>
   )
 }
@@ -251,9 +285,30 @@ function ItemsGroup({
           nx = Math.round(nx / 0.1) * 0.1
           nz = Math.round(nz / 0.1) * 0.1
         }
+        const dItem = useStore.getState().project.items.find((i) => i.id === drag.id)
+        // kitchen cabinets snap their back against a nearby wall
+        let snapped: { x: number; z: number; rotationY: number } | null = null
+        if (dItem?.kind === 'cabinet' && !e.shiftKey) {
+          const entry = catalogById(dItem.catalogId)
+          const depth =
+            typeof dItem.params?.depth === 'number'
+              ? dItem.params.depth
+              : (entry?.size.d ?? 0.6)
+          snapped = snapCabinetToWall(
+            { x: nx, z: nz },
+            depth,
+            useStore.getState().project.walls,
+          )
+        }
         useStore.getState().update((proj) => {
           const it = proj.items.find((i) => i.id === drag.id)
-          if (it) it.position = { x: nx, z: nz }
+          if (!it) return
+          if (snapped) {
+            it.position = { x: snapped.x, z: snapped.z }
+            it.rotationY = snapped.rotationY
+          } else {
+            it.position = { x: nx, z: nz }
+          }
         })
         return
       }
@@ -385,10 +440,78 @@ function WalkControls() {
     if (k['KeyS'] || k['ArrowDown']) camera.position.addScaledVector(dir, -speed)
     if (k['KeyD'] || k['ArrowRight']) camera.position.addScaledVector(right, speed)
     if (k['KeyA'] || k['ArrowLeft']) camera.position.addScaledVector(right, -speed)
+    // resolve wall collisions (doorways at eye height stay passable)
+    resolveWallCollision(camera.position, 1.6)
     camera.position.y = 1.6
   })
 
   return <PointerLockControls makeDefault />
+}
+
+// Push a walker position out of any wall it penetrates. Openings that are open
+// at the given eye height (doors always; windows only within their vertical
+// span) are treated as passable gaps.
+function resolveWallCollision(pos: THREE.Vector3, eyeY: number) {
+  const { walls, openings } = useStore.getState().project
+  const radius = 0.28
+  for (const w of walls) {
+    const proj = projectOnSegment({ x: pos.x, z: pos.z }, w.a, w.b)
+    const minDist = radius + w.thickness / 2
+    if (proj.dist >= minDist || proj.dist < 1e-5) continue
+    // is this point within a passable opening?
+    const offset = dist(w.a, proj.point)
+    const passable = openings.some((o) => {
+      if (o.wallId !== w.id) return false
+      const within = Math.abs(offset - o.offset) < o.width / 2
+      if (!within) return false
+      // passable if the eye height is inside the opening void
+      return eyeY >= o.sillHeight && eyeY <= o.sillHeight + o.height
+    })
+    if (passable) continue
+    const nx = (pos.x - proj.point.x) / proj.dist
+    const nz = (pos.z - proj.point.z) / proj.dist
+    pos.x = proj.point.x + nx * minDist
+    pos.z = proj.point.z + nz * minDist
+  }
+}
+
+// Snap a cabinet so its back sits against the nearest wall (within maxDist).
+// Returns snapped position + rotation, or null if no wall is close enough.
+function snapCabinetToWall(
+  pos: Vec2,
+  depth: number,
+  walls: Wall[],
+  maxDist = 0.7,
+): { x: number; z: number; rotationY: number } | null {
+  let best: { w: Wall; point: Vec2 } | null = null
+  let bestD = maxDist
+  for (const w of walls) {
+    const proj = projectOnSegment(pos, w.a, w.b)
+    if (proj.t <= 0.001 || proj.t >= 0.999) continue
+    if (proj.dist < bestD) {
+      bestD = proj.dist
+      best = { w, point: proj.point }
+    }
+  }
+  if (!best) return null
+  const w = best.w
+  const L = dist(w.a, w.b)
+  if (L < 1e-4) return null
+  const dirx = (w.b.x - w.a.x) / L
+  const dirz = (w.b.z - w.a.z) / L
+  let nx = -dirz
+  let nz = dirx
+  // point the normal toward the current (interior) side
+  if (nx * (pos.x - best.point.x) + nz * (pos.z - best.point.z) < 0) {
+    nx = -nx
+    nz = -nz
+  }
+  const off = depth / 2 + w.thickness / 2
+  return {
+    x: best.point.x + nx * off,
+    z: best.point.z + nz * off,
+    rotationY: Math.atan2(nx, nz), // local +z (front) faces the interior normal
+  }
 }
 
 export { polygonCentroid }

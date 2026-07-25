@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { useGLTF } from '@react-three/drei'
 import type { Item, Material } from '../../types/project'
 import { SurfaceMaterial } from '../materials/SurfaceMaterial'
@@ -77,7 +78,11 @@ export function FurnitureModel({ item }: { item: Item }) {
         <Lamp h={size.h} m={m} />
       )
     case 'glb':
-      return item.modelUrl ? <GLBModel url={item.modelUrl} m={m} /> : null
+      return item.modelUrl ? (
+        <Suspense fallback={null}>
+          <GLBModel url={item.modelUrl} m={m} />
+        </Suspense>
+      ) : null
     default:
       return (
         <mesh castShadow>
