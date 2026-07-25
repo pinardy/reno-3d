@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Move, RotateCw, Info, Ruler, Map } from 'lucide-react'
+import { Move, RotateCw, Info, Ruler, Map, Building2, PencilRuler } from 'lucide-react'
 import { SceneRoot, type GroundPicker } from './SceneRoot'
 import { useStore, storeApi } from '../../store/store'
 import { catalogById, newItemFromCatalog } from '../catalog/catalog'
@@ -11,6 +11,8 @@ export function DesignView() {
   const pickerRef = useRef<GroundPicker | null>(null)
   const [gizmoMode, setGizmoMode] = useState<'move' | 'rotate'>('move')
   const [showDimensions, setShowDimensions] = useState(false)
+  const [dollhouse, setDollhouse] = useState(false)
+  const [measure, setMeasure] = useState(false)
   const cameraMode = useStore((s) => s.cameraMode)
   const hasContent = useStore(
     (s) => s.project.walls.length > 0 || s.project.items.length > 0,
@@ -44,6 +46,8 @@ export function DesignView() {
           pickerRef={pickerRef}
           gizmoMode={gizmoMode}
           showDimensions={showDimensions}
+          dollhouse={dollhouse}
+          measure={measure}
         />
       </Canvas>
 
@@ -86,6 +90,26 @@ export function DesignView() {
           </button>
           <button
             type="button"
+            title="Dollhouse view — cut walls down for a top-down look inside"
+            onClick={() => setDollhouse((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ${
+              dollhouse ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
+            }`}
+          >
+            <Building2 size={14} /> Dollhouse
+          </button>
+          <button
+            type="button"
+            title="Measure — click two points to get the distance"
+            onClick={() => setMeasure((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ${
+              measure ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
+            }`}
+          >
+            <PencilRuler size={14} /> Measure
+          </button>
+          <button
+            type="button"
             title="Export a top-down floor plan (PNG)"
             onClick={() => exportFloorPlanPNG(useStore.getState().project)}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-neutral-300 hover:bg-panel2"
@@ -100,7 +124,9 @@ export function DesignView() {
         <Info size={12} />
         {cameraMode === 'walk'
           ? 'Walk: click to lock the mouse, WASD / arrows to move, Esc to release.'
-          : 'Drag furniture from the left. Drag it on the floor to move · switch to Rotate to spin · Shift snaps to grid.'}
+          : measure
+            ? 'Measure: click two points on any surface to see the distance. Click again to start over.'
+            : 'Drag furniture from the left. Drag it on the floor to move · switch to Rotate to spin · Shift snaps to grid.'}
       </div>
 
       {!hasContent && (

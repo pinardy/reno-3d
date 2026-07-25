@@ -43,6 +43,14 @@ export function TraceEditor() {
   const dragRef = useRef<DragState | null>(null)
   const rafRef = useRef<number | null>(null)
 
+  // exact-length entry while tracing ("type 3.6 + Enter")
+  const [dimEntry, setDimEntry] = useState<string | null>(null)
+  const dimEntryRef = useRef<string | null>(null)
+  const setDim = (v: string | null) => {
+    dimEntryRef.current = v
+    setDimEntry(v)
+  }
+
   const tool = useStore((s) => s.tool)
   const toolRef = useRef(tool)
   useEffect(() => {
@@ -50,6 +58,7 @@ export function TraceEditor() {
     // reset any in-progress drawing when switching tools
     chainRef.current = []
     scaleRef.current = null
+    setDim(null)
     requestRedraw()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tool])
@@ -517,6 +526,7 @@ export function TraceEditor() {
       } else {
         chain.push(s.point)
       }
+      setDim(null)
       requestRedraw()
       return
     }
@@ -692,6 +702,23 @@ export function TraceEditor() {
     }
     chainRef.current = []
     hoverRef.current = null
+    setDim(null)
+    requestRedraw()
+  }
+
+  // place the next chain point at an exact distance in the current hover direction
+  const placeByLength = (len: number) => {
+    const chain = chainRef.current
+    const hover = hoverRef.current
+    if (!chain.length || !hover || !(len > 0)) return
+    const last = chain[chain.length - 1]
+    let dx = hover.point.x - last.x
+    let dz = hover.point.z - last.z
+    const d = Math.hypot(dx, dz)
+    if (d < 1e-6) return
+    dx /= d
+    dz /= d
+    chain.push({ x: last.x + dx * len, z: last.z + dz * len })
     requestRedraw()
   }
 
@@ -758,12 +785,44 @@ export function TraceEditor() {
   const spaceRef = useRef(false)
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      const tgt = e.target
+      if (
+        tgt instanceof HTMLElement &&
+        (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)
+      )
+        return
       if (e.code === 'Space') spaceRef.current = true
+      const t = toolRef.current
+      const drawing = (t === 'wall' || t === 'room') && chainRef.current.length >= 1
+
+      // type an exact segment length: digits/decimal + Enter
+      if (drawing && /^[0-9.]$/.test(e.key)) {
+        setDim((dimEntryRef.current ?? '') + e.key)
+        e.preventDefault()
+        return
+      }
+      if (drawing && e.key === 'Backspace' && dimEntryRef.current != null) {
+        const nv = dimEntryRef.current.slice(0, -1)
+        setDim(nv || null)
+        e.preventDefault()
+        return
+      }
+
       if (e.key === 'Enter') {
-        const t = toolRef.current
-        if (t === 'wall' || t === 'room') finishChain(false)
+        if (t === 'wall' || t === 'room') {
+          if (dimEntryRef.current) {
+            placeByLength(parseFloat(dimEntryRef.current))
+            setDim(null)
+          } else {
+            finishChain(false)
+          }
+        }
       }
       if (e.key === 'Escape') {
+        if (dimEntryRef.current != null) {
+          setDim(null)
+          return
+        }
         if (chainRef.current.length || scaleRef.current) {
           chainRef.current = []
           scaleRef.current = null
@@ -799,8 +858,18 @@ export function TraceEditor() {
         onWheel={onWheel}
         onContextMenu={(e) => e.preventDefault()}
       />
+      {/* exact-length entry chip */}
+      {dimEntry !== null && (
+        <div className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white shadow-lg">
+          Length: {dimEntry || '0'} m — Enter to place · Esc to cancel
+        </div>
+      )}
+
       {/* status hints */}
       <div className="pointer-events-none absolute bottom-3 left-3 rounded-md bg-panel/80 px-3 py-1.5 text-[11px] text-neutral-400 backdrop-blur">
+        {(tool === 'wall' || tool === 'room')
+          ? 'Tip: point with the mouse, then type a number + Enter for an exact length. '
+          : ''}
         {hintFor(tool, hasImage, calibrated)}
       </div>
       <button

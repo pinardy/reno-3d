@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useThree, useFrame, type ThreeEvent } from '@react-three/fiber'
-import { OrbitControls, PointerLockControls, Grid } from '@react-three/drei'
+import {
+  OrbitControls,
+  PointerLockControls,
+  Grid,
+  Sky,
+  ContactShadows,
+} from '@react-three/drei'
 import { useStore } from '../../store/store'
 import type { Item, Room, Wall, Vec2 } from '../../types/project'
 import { buildWallPieces } from '../../geometry/walls'
@@ -12,6 +18,8 @@ import { catalogById } from '../catalog/catalog'
 import { polygonCentroid, projectOnSegment, dist } from '../../geometry/vec'
 import { registerCapturer } from './screenshot'
 import { DimensionLabels } from './DimensionLabels'
+import { OpeningsGroup } from './Openings'
+import { MeasureTool } from './MeasureTool'
 
 // Bridge so the HTML layer (drag-drop) can convert screen coords to a floor point.
 export type GroundPicker = (clientX: number, clientY: number) => Vec2 | null
@@ -20,14 +28,19 @@ export function SceneRoot({
   pickerRef,
   gizmoMode,
   showDimensions,
+  dollhouse,
+  measure,
 }: {
   pickerRef: React.MutableRefObject<GroundPicker | null>
   gizmoMode: 'move' | 'rotate'
   showDimensions: boolean
+  dollhouse: boolean
+  measure: boolean
 }) {
   const walls = useStore((s) => s.project.walls)
   const rooms = useStore((s) => s.project.rooms)
   const items = useStore((s) => s.project.items)
+  const openings = useStore((s) => s.project.openings)
   const cameraMode = useStore((s) => s.cameraMode)
 
   const { camera, gl, raycaster, scene } = useThree()
@@ -67,12 +80,14 @@ export function SceneRoot({
 
   return (
     <>
-      <color attach="background" args={['#aeb7c2']} />
-      <hemisphereLight args={['#ffffff', '#8d8272', 0.9]} />
+      {/* procedural daylight sky + sun */}
+      <Sky sunPosition={[10, 6, 4]} turbidity={6} rayleigh={1.2} mieCoefficient={0.006} />
+      <hemisphereLight args={['#dfe7f2', '#8d8272', 0.6]} />
       <ambientLight intensity={0.25} />
       <directionalLight
-        position={[6, 12, 4]}
-        intensity={1.6}
+        position={[10, 14, 6]}
+        intensity={2.2}
+        color="#fff4e0"
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-20}
@@ -81,6 +96,15 @@ export function SceneRoot({
         shadow-camera-bottom={-20}
         shadow-camera-far={60}
         shadow-bias={-0.0004}
+      />
+      {/* soft contact shadow to ground the whole scene */}
+      <ContactShadows
+        position={[0, 0.002, 0]}
+        scale={60}
+        far={6}
+        blur={2.4}
+        opacity={0.5}
+        resolution={1024}
       />
 
       {/* ground */}
@@ -108,20 +132,22 @@ export function SceneRoot({
         <meshStandardMaterial color="#9aa1a8" roughness={1} transparent opacity={0} />
       </mesh>
 
-      <WallsGroup walls={walls} openings={useStore.getState().project.openings} />
-      <CornerPosts walls={walls} />
+      <WallsGroup walls={walls} dollhouse={dollhouse} />
+      <CornerPosts walls={walls} dollhouse={dollhouse} />
+      <OpeningsGroup walls={walls} openings={openings} dollhouse={dollhouse} />
       {rooms.map((room) => (
         <RoomFloor key={room.id} room={room} />
       ))}
 
       {showDimensions && <DimensionLabels />}
+      {measure && cameraMode === 'orbit' && <MeasureTool />}
 
       <ItemsGroup
         items={items}
         orbitRef={orbitRef}
         intersectGround={intersectGround}
         gizmoMode={gizmoMode}
-        enabled={cameraMode === 'orbit'}
+        enabled={cameraMode === 'orbit' && !measure}
       />
 
       {cameraMode === 'orbit' ? (
@@ -142,14 +168,19 @@ export function SceneRoot({
   )
 }
 
+const DOLLHOUSE_H = 1.1 // capped wall height for the cutaway view
+
 // re-render walls when openings change too
-function WallsGroup({ walls }: { walls: Wall[]; openings: unknown }) {
+function WallsGroup({ walls, dollhouse }: { walls: Wall[]; dollhouse: boolean }) {
   const openings = useStore((s) => s.project.openings)
   const select = useStore((s) => s.select)
   const selection = useStore((s) => s.selection)
   return (
     <group>
-      {walls.map((wall) => {
+      {walls.map((wall0) => {
+        const wall = dollhouse
+          ? { ...wall0, height: Math.min(wall0.height, DOLLHOUSE_H) }
+          : wall0
         const pieces = buildWallPieces(wall, openings)
         const sel = selection.type === 'wall' && selection.id === wall.id
         return (
@@ -183,24 +214,25 @@ function WallsGroup({ walls }: { walls: Wall[]; openings: unknown }) {
 }
 
 // Vertical posts at each wall endpoint fill the gaps/seams where wall boxes meet.
-function CornerPosts({ walls }: { walls: Wall[] }) {
+function CornerPosts({ walls, dollhouse }: { walls: Wall[]; dollhouse: boolean }) {
   const posts = useMemo(() => {
     const vs: { x: number; z: number; thick: number; height: number; material: Wall['material'] }[] = []
     for (const w of walls) {
+      const h = dollhouse ? Math.min(w.height, DOLLHOUSE_H) : w.height
       for (const end of [w.a, w.b]) {
         const found = vs.find(
           (v) => Math.abs(v.x - end.x) < 0.02 && Math.abs(v.z - end.z) < 0.02,
         )
         if (found) {
           found.thick = Math.max(found.thick, w.thickness)
-          found.height = Math.max(found.height, w.height)
+          found.height = Math.max(found.height, h)
         } else {
-          vs.push({ x: end.x, z: end.z, thick: w.thickness, height: w.height, material: w.material })
+          vs.push({ x: end.x, z: end.z, thick: w.thickness, height: h, material: w.material })
         }
       }
     }
     return vs
-  }, [walls])
+  }, [walls, dollhouse])
 
   return (
     <group>
@@ -248,8 +280,10 @@ function RoomFloor({ room }: { room: Room }) {
 }
 
 interface ItemDrag {
-  id: string
-  offset: Vec2
+  ids: string[]
+  starts: Record<string, Vec2>
+  pointerStart: Vec2
+  single: boolean // single-item drags support cabinet wall-snap
   pre: import('../../types/project').Project
 }
 
@@ -266,8 +300,7 @@ function ItemsGroup({
   gizmoMode: 'move' | 'rotate'
   enabled: boolean
 }) {
-  const select = useStore((s) => s.select)
-  const selection = useStore((s) => s.selection)
+  const selectedItemIds = useStore((s) => s.selectedItemIds)
   const { gl } = useThree()
   const dragRef = useRef<ItemDrag | null>(null)
   const rotRef = useRef<{ id: string; startAngle: number; itemStart: number; pre: any } | null>(null)
@@ -279,37 +312,57 @@ function ItemsGroup({
       if (drag && enabled) {
         const p = intersectGround(e.clientX, e.clientY)
         if (!p) return
-        let nx = p.x - drag.offset.x
-        let nz = p.z - drag.offset.z
-        if (e.shiftKey) {
-          nx = Math.round(nx / 0.1) * 0.1
-          nz = Math.round(nz / 0.1) * 0.1
-        }
-        const dItem = useStore.getState().project.items.find((i) => i.id === drag.id)
-        // kitchen cabinets snap their back against a nearby wall
-        let snapped: { x: number; z: number; rotationY: number } | null = null
-        if (dItem?.kind === 'cabinet' && !e.shiftKey) {
-          const entry = catalogById(dItem.catalogId)
-          const depth =
-            typeof dItem.params?.depth === 'number'
-              ? dItem.params.depth
-              : (entry?.size.d ?? 0.6)
-          snapped = snapCabinetToWall(
-            { x: nx, z: nz },
-            depth,
-            useStore.getState().project.walls,
-          )
-        }
-        useStore.getState().update((proj) => {
-          const it = proj.items.find((i) => i.id === drag.id)
-          if (!it) return
-          if (snapped) {
-            it.position = { x: snapped.x, z: snapped.z }
-            it.rotationY = snapped.rotationY
-          } else {
-            it.position = { x: nx, z: nz }
+        let dx = p.x - drag.pointerStart.x
+        let dz = p.z - drag.pointerStart.z
+
+        if (drag.single) {
+          const id = drag.ids[0]
+          const start = drag.starts[id]
+          let nx = start.x + dx
+          let nz = start.z + dz
+          if (e.shiftKey) {
+            nx = Math.round(nx / 0.1) * 0.1
+            nz = Math.round(nz / 0.1) * 0.1
           }
-        })
+          const dItem = useStore.getState().project.items.find((i) => i.id === id)
+          // kitchen cabinets snap their back against a nearby wall
+          let snapped: { x: number; z: number; rotationY: number } | null = null
+          if (dItem?.kind === 'cabinet' && !e.shiftKey) {
+            const entry = catalogById(dItem.catalogId)
+            const depth =
+              typeof dItem.params?.depth === 'number'
+                ? dItem.params.depth
+                : (entry?.size.d ?? 0.6)
+            snapped = snapCabinetToWall(
+              { x: nx, z: nz },
+              depth,
+              useStore.getState().project.walls,
+            )
+          }
+          useStore.getState().update((proj) => {
+            const it = proj.items.find((i) => i.id === id)
+            if (!it) return
+            if (snapped) {
+              it.position = { x: snapped.x, z: snapped.z }
+              it.rotationY = snapped.rotationY
+            } else {
+              it.position = { x: nx, z: nz }
+            }
+          })
+        } else {
+          // group move: apply the same (optionally grid-snapped) delta to all
+          if (e.shiftKey) {
+            dx = Math.round(dx / 0.1) * 0.1
+            dz = Math.round(dz / 0.1) * 0.1
+          }
+          useStore.getState().update((proj) => {
+            for (const id of drag.ids) {
+              const it = proj.items.find((i) => i.id === id)
+              const start = drag.starts[id]
+              if (it && start) it.position = { x: start.x + dx, z: start.z + dz }
+            }
+          })
+        }
         return
       }
       const rot = rotRef.current
@@ -349,31 +402,53 @@ function ItemsGroup({
   function onItemDown(e: ThreeEvent<PointerEvent>, item: Item) {
     if (!enabled) return
     e.stopPropagation()
-    select({ type: 'item', id: item.id })
+    const st = useStore.getState()
+
+    // shift-click toggles the item in/out of the multi-selection (no drag)
+    if (e.nativeEvent.shiftKey) {
+      st.toggleItem(item.id)
+      return
+    }
+
+    const inMulti =
+      st.selectedItemIds.length > 1 && st.selectedItemIds.includes(item.id)
+    if (!inMulti) st.select({ type: 'item', id: item.id })
+
     const p = intersectGround(e.nativeEvent.clientX, e.nativeEvent.clientY)
     if (!p) return
     if (orbitRef.current) orbitRef.current.enabled = false
-    if (gizmoMode === 'rotate') {
+
+    if (gizmoMode === 'rotate' && !inMulti) {
       const startAngle = Math.atan2(p.z - item.position.z, p.x - item.position.x)
       rotRef.current = {
         id: item.id,
         startAngle,
         itemStart: item.rotationY,
-        pre: useStore.getState().project,
+        pre: st.project,
       }
-    } else {
-      dragRef.current = {
-        id: item.id,
-        offset: { x: p.x - item.position.x, z: p.z - item.position.z },
-        pre: useStore.getState().project,
-      }
+      return
+    }
+
+    const proj = useStore.getState().project
+    const ids = inMulti ? [...st.selectedItemIds] : [item.id]
+    const starts: Record<string, Vec2> = {}
+    for (const id of ids) {
+      const it = proj.items.find((i) => i.id === id)
+      if (it) starts[id] = { ...it.position }
+    }
+    dragRef.current = {
+      ids,
+      starts,
+      pointerStart: { x: p.x, z: p.z },
+      single: ids.length === 1,
+      pre: st.project,
     }
   }
 
   return (
     <group>
       {items.map((item) => {
-        const sel = selection.type === 'item' && selection.id === item.id
+        const sel = selectedItemIds.includes(item.id)
         return (
           <group
             key={item.id}
@@ -381,10 +456,6 @@ function ItemsGroup({
             rotation={[0, item.rotationY, 0]}
             scale={item.scale}
             onPointerDown={(e) => onItemDown(e, item)}
-            onClick={(e) => {
-              e.stopPropagation()
-              select({ type: 'item', id: item.id })
-            }}
           >
             <FurnitureModel item={item} />
             {sel && <SelectionRing item={item} />}

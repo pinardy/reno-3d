@@ -1,14 +1,17 @@
-import { Trash2, Home, Copy } from 'lucide-react'
+import { Trash2, Home, Copy, Boxes } from 'lucide-react'
 import { useStore, storeApi } from '../../store/store'
 import { Section, Row, NumberInput, TextInput } from '../../app/ui'
 import { MaterialEditor } from '../materials/MaterialEditor'
 import { PAINT_PRESETS, FLOOR_PRESETS } from '../materials/presets'
+import { dist } from '../../geometry/vec'
 import type { Material } from '../../types/project'
 
 export function Inspector() {
   const selection = useStore((s) => s.selection)
   const project = useStore((s) => s.project)
+  const multiCount = useStore((s) => s.selectedItemIds.length)
 
+  if (multiCount > 1) return <MultiInspector count={multiCount} />
   if (!selection.id) return <EmptyInspector />
 
   if (selection.type === 'wall') {
@@ -39,6 +42,36 @@ function DeleteButton({ label }: { label: string }) {
     >
       <Trash2 size={14} /> Delete {label}
     </button>
+  )
+}
+
+function MultiInspector({ count }: { count: number }) {
+  return (
+    <Section title={`${count} items selected`}>
+      <div className="flex items-center gap-2 text-sm text-neutral-300">
+        <Boxes size={16} className="text-accent" /> Multiple furniture
+      </div>
+      <div className="mt-3 space-y-2">
+        <button
+          type="button"
+          onClick={() => storeApi.duplicateSelectedItem()}
+          className="flex w-full items-center justify-center gap-2 rounded bg-panel2 py-2 text-xs text-neutral-300 hover:bg-edge"
+        >
+          <Copy size={14} /> Duplicate all
+        </button>
+        <button
+          type="button"
+          onClick={() => storeApi.removeSelected()}
+          className="flex w-full items-center justify-center gap-2 rounded bg-red-500/10 py-2 text-xs text-red-300 hover:bg-red-500/20"
+        >
+          <Trash2 size={14} /> Delete all
+        </button>
+      </div>
+      <p className="mt-2 text-[11px] leading-relaxed text-neutral-500">
+        Drag any selected item to move the group. Shift-click items to add or
+        remove them from the selection.
+      </p>
+    </Section>
   )
 }
 
@@ -100,6 +133,35 @@ function WallInspector() {
   return (
     <div>
       <Section title="Wall">
+        <Row label="Length">
+          <NumberInput
+            value={dist(wall.a, wall.b)}
+            step={0.05}
+            min={0.1}
+            max={50}
+            suffix="m"
+            onChange={(len) => {
+              if (!(len > 0)) return
+              commit((p) => {
+                const w = p.walls.find((x) => x.id === id)
+                if (!w) return
+                const L = dist(w.a, w.b)
+                if (L < 1e-6) return
+                const dx = (w.b.x - w.a.x) / L
+                const dz = (w.b.z - w.a.z) / L
+                const oldB = { ...w.b }
+                const nb = { x: w.a.x + dx * len, z: w.a.z + dz * len }
+                // move every endpoint coincident with the old b vertex
+                for (const ww of p.walls) {
+                  if (Math.abs(ww.a.x - oldB.x) < 0.02 && Math.abs(ww.a.z - oldB.z) < 0.02)
+                    ww.a = { ...nb }
+                  if (Math.abs(ww.b.x - oldB.x) < 0.02 && Math.abs(ww.b.z - oldB.z) < 0.02)
+                    ww.b = { ...nb }
+                }
+              })
+            }}
+          />
+        </Row>
         <Row label="Height">
           <NumberInput
             value={wall.height}

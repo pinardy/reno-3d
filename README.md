@@ -25,20 +25,24 @@ Other scripts: `npm run build` (production build), `npm run preview`.
    its real length in metres. This calibrates everything. _(Required before tracing
    when an image is loaded.)_
 3. **Trace walls** (Wall tool `W`) — click corners; walls snap to existing points,
-   grid, and right angles. Enter / double-click to finish, click the start point to
-   close a loop.
+   grid, and right angles. For an exact length, point with the mouse then **type a
+   number + Enter**. Enter / double-click to finish, click the start point to close a
+   loop. Select a wall to edit its **length/height/thickness** numerically.
 4. **Doors & windows** (`D` / `N`) — click on a wall to place an opening.
 5. **Rooms** — click **Detect rooms from walls**, or draw floors by hand with the
    Room tool (`R`).
 6. **Design 3D** — switch modes (top bar). Walls extrude, room floors fill in.
    **Orbit** to look around or **Walk** (click to lock the mouse, WASD / arrows).
 7. **Furnish** — drag furniture from the left catalog onto the floor; drag to move,
-   switch to **Rotate** to spin, hold **Shift** to snap to grid. The catalog spans
-   Living, Bedroom, Kitchen, Dining, Bathroom, Office and Decor.
+   switch to **Rotate** to spin, hold **Shift** to snap to grid. **Shift-click** to
+   multi-select and move a group; **Cmd/Ctrl+D** duplicates. The catalog spans Living,
+   Bedroom, Kitchen, Dining, Bathroom, Office and Decor.
 8. **Materials** — select any wall, floor or item and edit its colour / roughness /
    texture on the right. "Apply colour to all walls" repaints the whole home.
-9. **Measure** — toggle **Dimensions** (ruler icon, 3D view) to overlay every wall
-   length and each room's size + area in the scene.
+9. **View & measure** (3D toolbar) — **Dimensions** overlays wall lengths and room
+   areas · **Dollhouse** cuts the walls down for a top-down look inside · **Measure**
+   clicks two points for a distance. The right panel shows per-room + total floor area
+   and a rough cost estimate.
 10. **Save / share** — autosaves to your browser (IndexedDB). From the top bar:
     export/import `.json`, export a **top-down floor plan PNG** (map icon: walls,
     door/window symbols, room areas, furniture footprints, dimensions + scale bar),

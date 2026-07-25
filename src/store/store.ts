@@ -36,6 +36,8 @@ interface AppState {
   setCameraMode: (m: CameraMode) => void
   select: (sel: Selection) => void
   clearSelection: () => void
+  selectedItemIds: string[] // multi-selection of furniture
+  toggleItem: (id: string) => void // shift-click add/remove
 
   // ----- project-level -----
   loadProject: (p: Project) => void
@@ -66,16 +68,36 @@ export const useStore = create<AppState>((set, get) => ({
   editorMode: 'trace',
   tool: 'select',
   selection: { type: null, id: null },
+  selectedItemIds: [],
   cameraMode: 'orbit',
   saveState: 'idle',
 
   setSaveState: (s) => set({ saveState: s }),
 
   setEditorMode: (m) => set({ editorMode: m }),
-  setTool: (t) => set({ tool: t, selection: { type: null, id: null } }),
+  setTool: (t) =>
+    set({ tool: t, selection: { type: null, id: null }, selectedItemIds: [] }),
   setCameraMode: (m) => set({ cameraMode: m }),
-  select: (sel) => set({ selection: sel }),
-  clearSelection: () => set({ selection: { type: null, id: null } }),
+  select: (sel) =>
+    set({
+      selection: sel,
+      selectedItemIds: sel.type === 'item' && sel.id ? [sel.id] : [],
+    }),
+  clearSelection: () =>
+    set({ selection: { type: null, id: null }, selectedItemIds: [] }),
+  toggleItem: (id) =>
+    set((state) => {
+      const has = state.selectedItemIds.includes(id)
+      const ids = has
+        ? state.selectedItemIds.filter((x) => x !== id)
+        : [...state.selectedItemIds, id]
+      return {
+        selectedItemIds: ids,
+        selection: ids.length
+          ? { type: 'item', id: ids[ids.length - 1] }
+          : { type: null, id: null },
+      }
+    }),
 
   loadProject: (p) =>
     set({
@@ -83,6 +105,7 @@ export const useStore = create<AppState>((set, get) => ({
       past: [],
       future: [],
       selection: { type: null, id: null },
+      selectedItemIds: [],
     }),
   newProject: () =>
     set({
@@ -90,6 +113,7 @@ export const useStore = create<AppState>((set, get) => ({
       past: [],
       future: [],
       selection: { type: null, id: null },
+      selectedItemIds: [],
       tool: 'select',
       editorMode: 'trace',
     }),
@@ -176,25 +200,46 @@ export const storeApi = {
   },
   duplicateSelectedItem() {
     const st = useStore.getState()
-    if (st.selection.type !== 'item' || !st.selection.id) return
-    const src = st.project.items.find((i) => i.id === st.selection.id)
-    if (!src) return
-    const id = nanoid()
-    const copy: Item = {
-      ...src,
-      id,
-      position: { x: src.position.x + 0.4, z: src.position.z + 0.4 },
-      material: { ...src.material },
-      params: src.params ? { ...src.params } : undefined,
-    }
+    const ids = st.selectedItemIds.length
+      ? st.selectedItemIds
+      : st.selection.type === 'item' && st.selection.id
+        ? [st.selection.id]
+        : []
+    if (!ids.length) return
+    const newIds: string[] = []
     st.commit((p) => {
-      p.items.push(copy)
+      for (const id of ids) {
+        const src = p.items.find((i) => i.id === id)
+        if (!src) continue
+        const nid = nanoid()
+        newIds.push(nid)
+        p.items.push({
+          ...src,
+          id: nid,
+          position: { x: src.position.x + 0.4, z: src.position.z + 0.4 },
+          material: { ...src.material },
+          params: src.params ? { ...src.params } : undefined,
+        })
+      }
     })
-    st.select({ type: 'item', id })
-    return id
+    useStore.setState({
+      selectedItemIds: newIds,
+      selection: newIds.length
+        ? { type: 'item', id: newIds[newIds.length - 1] }
+        : { type: null, id: null },
+    })
+    return newIds[0]
   },
   removeSelected() {
-    const { selection, commit, clearSelection } = useStore.getState()
+    const { selection, selectedItemIds, commit, clearSelection } = useStore.getState()
+    // multi-selected furniture
+    if (selectedItemIds.length > 0) {
+      commit((p) => {
+        p.items = p.items.filter((i) => !selectedItemIds.includes(i.id))
+      })
+      clearSelection()
+      return
+    }
     if (!selection.id) return
     commit((p) => {
       if (selection.type === 'wall') {
