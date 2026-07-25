@@ -12,6 +12,7 @@ describe('HDB templates', () => {
       expect(p.rooms.length).toBeGreaterThanOrEqual(4)
       expect(p.openings.some((o) => o.type === 'door')).toBe(true)
       expect(p.items.every((i) => !!catalogById(i.catalogId))).toBe(true)
+      expect(p.walls.some((w) => w.structural)).toBe(true) // perimeter marked structural
     })
   }
 })

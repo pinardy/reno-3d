@@ -28,9 +28,11 @@ interface AppState {
   cameraMode: CameraMode
   saveState: 'idle' | 'saving' | 'saved'
   helpOpen: boolean
+  hdbOpen: boolean
 
   setSaveState: (s: 'idle' | 'saving' | 'saved') => void
   setHelpOpen: (v: boolean) => void
+  setHdbOpen: (v: boolean) => void
 
   // ----- meta / mode -----
   setEditorMode: (m: EditorMode) => void
@@ -75,9 +77,11 @@ export const useStore = create<AppState>((set, get) => ({
   cameraMode: 'orbit',
   saveState: 'idle',
   helpOpen: false,
+  hdbOpen: false,
 
   setSaveState: (s) => set({ saveState: s }),
   setHelpOpen: (v) => set({ helpOpen: v }),
+  setHdbOpen: (v) => set({ hdbOpen: v }),
 
   setEditorMode: (m) => set({ editorMode: m }),
   setTool: (t) =>
@@ -252,6 +256,17 @@ export const storeApi = {
       return
     }
     if (!selection.id) return
+    // warn before hacking a wall marked structural (HDB load-bearing)
+    if (selection.type === 'wall') {
+      const w = useStore.getState().project.walls.find((x) => x.id === selection.id)
+      if (
+        w?.structural &&
+        !confirm(
+          'This wall is marked STRUCTURAL / load-bearing.\nHDB does not allow hacking structural walls or the household shelter.\n\nRemove it from the model anyway?',
+        )
+      )
+        return
+    }
     commit((p) => {
       if (selection.type === 'wall') {
         p.walls = p.walls.filter((w) => w.id !== selection.id)

@@ -196,6 +196,25 @@ function WallInspector() {
             }
           />
         </Row>
+        <label className="mt-1 flex items-center justify-between text-xs">
+          <span className="text-neutral-400">Structural (can't hack)</span>
+          <input
+            type="checkbox"
+            checked={!!wall.structural}
+            onChange={(e) =>
+              commit((p) => {
+                const w = p.walls.find((x) => x.id === id)
+                if (w) w.structural = e.target.checked
+              })
+            }
+          />
+        </label>
+        {wall.structural && (
+          <p className="mt-1 rounded bg-amber-500/10 px-2 py-1 text-[10px] leading-tight text-amber-300">
+            ⚠ Load-bearing — HDB does not allow hacking structural walls or the
+            household shelter. Verify with HDB / your contractor.
+          </p>
+        )}
       </Section>
       <Section title="Material">
         <MaterialEditor material={wall.material} onChange={patchMat} presets={PAINT_PRESETS} />

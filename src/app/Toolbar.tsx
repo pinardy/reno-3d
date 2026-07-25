@@ -16,6 +16,7 @@ import {
   FileText,
   Boxes,
   Share2,
+  ShieldCheck,
 } from 'lucide-react'
 import { useStore } from '../store/store'
 import { IconBtn } from './ui'
@@ -165,6 +166,12 @@ export function Toolbar() {
         <Upload size={15} />
       </IconBtn>
       <div className="h-6 w-px bg-edge" />
+      <IconBtn
+        title="HDB renovation rules checklist"
+        onClick={() => useStore.getState().setHdbOpen(true)}
+      >
+        <ShieldCheck size={15} />
+      </IconBtn>
       <IconBtn title="Help & shortcuts" onClick={() => useStore.getState().setHelpOpen(true)}>
         <HelpCircle size={15} />
       </IconBtn>

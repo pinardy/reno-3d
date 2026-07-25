@@ -84,12 +84,25 @@ export function drawTrace(ctx: CanvasRenderingContext2D, o: TraceDrawOpts) {
       const sel = selection.type === 'wall' && selection.id === wall.id
       const px = Math.max(3, wall.thickness * v.zoom)
       ctx.lineCap = 'round'
-      ctx.strokeStyle = sel ? '#4f8cff' : '#c7ccd6'
+      // structural walls are drawn amber so they stand out as "don't hack"
+      ctx.strokeStyle = sel ? '#4f8cff' : wall.structural ? '#e6a23c' : '#c7ccd6'
       ctx.lineWidth = px
       ctx.beginPath()
       ctx.moveTo(a.x, a.y)
       ctx.lineTo(b.x, b.y)
       ctx.stroke()
+      // hatch structural walls with a dashed centre line
+      if (wall.structural && !sel) {
+        ctx.save()
+        ctx.strokeStyle = '#7a5a1e'
+        ctx.lineWidth = 1.5
+        ctx.setLineDash([5, 4])
+        ctx.beginPath()
+        ctx.moveTo(a.x, a.y)
+        ctx.lineTo(b.x, b.y)
+        ctx.stroke()
+        ctx.restore()
+      }
       // endpoints
       for (const s of [a, b]) {
         ctx.fillStyle = '#20242c'

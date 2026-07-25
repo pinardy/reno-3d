@@ -26,6 +26,7 @@ export interface Wall {
   height: number // metres
   thickness: number // metres
   material: Material
+  structural?: boolean // load-bearing / can't be hacked (HDB)
 }
 
 export type OpeningType = 'door' | 'window' | 'cased' | 'sliding'

@@ -3,6 +3,7 @@ import { Toolbar } from './app/Toolbar'
 import { LeftPanel } from './app/LeftPanel'
 import { RightPanel } from './app/RightPanel'
 import { HelpPanel } from './app/HelpPanel'
+import { HdbRulesPanel } from './app/HdbRulesPanel'
 import { TraceEditor } from './features/trace/TraceEditor'
 import { useStore } from './store/store'
 import { usePersistence } from './features/persistence/autosave'
@@ -54,6 +55,7 @@ export default function App() {
         <RightPanel />
       </div>
       <HelpPanel />
+      <HdbRulesPanel />
     </div>
   )
 }

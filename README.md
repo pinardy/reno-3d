@@ -58,6 +58,13 @@ Other scripts: `npm run build` (production build), `npm run preview`.
 Installable as a **PWA** (works offline once loaded), and the 2D editor supports
 **pinch-zoom / two-finger pan** on touch devices. New to it? The **? Help** button
 (top bar) has a guided walkthrough and shortcuts.
+
+**For HDB BTO owners:** mark walls as **structural / can't-hack** in the wall inspector
+(shown amber on the plan; warns before you remove one — perimeter walls of the HDB
+templates come pre-marked), and open the **HDB renovation checklist** (shield icon) for
+a tick-off list of reno rules (permits, no hacking structural walls / the household
+shelter, flooring weight, waterproofing, windows, aircon). It's general guidance to
+confirm with HDB and a registered contractor — not legal advice.
 10. **Save / share** — autosaves to your browser (IndexedDB). From the top bar:
     export/import `.json`, export a **top-down floor plan PNG** (map icon: walls,
     door/window symbols, room areas, furniture footprints, dimensions + scale bar),

@@ -30,13 +30,14 @@ class FlatBuilder {
     this.p.floorPlan.pxPerMeter = 100
     this.W = W
     this.D = D
-    this.top = this.wall(0, 0, W, 0)
-    this.right = this.wall(W, 0, W, D)
-    this.bottom = this.wall(W, D, 0, D)
-    this.left = this.wall(0, D, 0, 0)
+    // perimeter walls are typically structural/load-bearing in HDB flats
+    this.top = this.wall(0, 0, W, 0, true)
+    this.right = this.wall(W, 0, W, D, true)
+    this.bottom = this.wall(W, D, 0, D, true)
+    this.left = this.wall(0, D, 0, 0, true)
   }
 
-  wall(ax: number, az: number, bx: number, bz: number): string {
+  wall(ax: number, az: number, bx: number, bz: number, structural = false): string {
     const id = nanoid()
     this.p.walls.push({
       id,
@@ -45,6 +46,7 @@ class FlatBuilder {
       height: this.p.wallHeight,
       thickness: this.p.wallThickness,
       material: { ...DEFAULT_WALL_MATERIAL },
+      structural,
     })
     return id
   }
