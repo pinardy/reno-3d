@@ -324,6 +324,32 @@ function OpeningInspector() {
             </button>
           ))}
         </div>
+        {op.type === 'door' && (
+          <div className="mt-2">
+            <div className="mb-1 text-[10px] uppercase tracking-wider text-neutral-500">
+              Hinge side
+            </div>
+            <div className="flex gap-1">
+              {(['left', 'right'] as const).map((h) => (
+                <button
+                  key={h}
+                  type="button"
+                  onClick={() => commit((p) => {
+                    const o = p.openings.find((x) => x.id === id)
+                    if (o) o.hinge = h
+                  })}
+                  className={`flex-1 rounded py-1 text-[11px] capitalize ${
+                    (op.hinge ?? 'left') === h
+                      ? 'bg-accent text-white'
+                      : 'bg-panel2 text-neutral-300 hover:bg-edge'
+                  }`}
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <DeleteButton label={op.type} />
       </Section>
     </div>

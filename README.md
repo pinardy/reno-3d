@@ -13,8 +13,8 @@ npm install
 npm run dev        # http://localhost:5173
 ```
 
-Click **✨ Load sample home** to explore a furnished 2-room flat immediately, or
-follow the workflow below with your own floor plan.
+Start from an **HDB template** (3 / 4 / 5-room) or **✨ Sample home** to explore a
+furnished flat immediately, or follow the workflow below with your own floor plan.
 
 Other scripts: `npm run build` (production build), `npm run preview`.
 
@@ -39,10 +39,13 @@ Other scripts: `npm run build` (production build), `npm run preview`.
    Bedroom, Kitchen, Dining, Bathroom, Office and Decor.
 8. **Materials** — select any wall, floor or item and edit its colour / roughness /
    texture on the right. "Apply colour to all walls" repaints the whole home.
-9. **View & measure** (3D toolbar) — **Dimensions** overlays wall lengths and room
-   areas · **Dollhouse** cuts the walls down for a top-down look inside · **Measure**
-   clicks two points for a distance. The right panel shows per-room + total floor area
-   and a rough cost estimate.
+9. **View, light & measure** (3D toolbar) — **Dimensions** overlays wall lengths and
+   room areas · **Dollhouse** cuts the walls down for a top-down look inside ·
+   **Measure** clicks two points for a distance · the **time-of-day** slider drives the
+   sun/sky and turns on room lights at night. Doors have a **hinge-side** control.
+10. **Budget** — the right panel shows per-room + total floor area with a rough reno
+    estimate, plus a **furniture total** and a **shopping-list CSV export** (ballpark
+    per-item prices you can replace with real quotes).
 10. **Save / share** — autosaves to your browser (IndexedDB). From the top bar:
     export/import `.json`, export a **top-down floor plan PNG** (map icon: walls,
     door/window symbols, room areas, furniture footprints, dimensions + scale bar),

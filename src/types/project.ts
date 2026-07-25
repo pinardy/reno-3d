@@ -38,6 +38,7 @@ export interface Opening {
   width: number // metres
   height: number // metres
   sillHeight: number // metres from floor to bottom of opening (0 for doors)
+  hinge?: 'left' | 'right' // door hinge side (default 'left')
 }
 
 export interface Room {

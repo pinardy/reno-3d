@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { Download } from 'lucide-react'
 import { useStore } from '../../store/store'
 import { polygonArea } from '../../geometry/vec'
 import { Section } from '../../app/ui'
+import { furnitureTotal, exportShoppingListCSV } from '../persistence/shoppingList'
 
 const RATE_KEY = 'reno:costRatePerM2'
 const DEFAULT_RATE = 1500 // rough S$/m² renovation estimate
@@ -10,6 +12,8 @@ const DEFAULT_RATE = 1500 // rough S$/m² renovation estimate
 // renovation cost estimate (editable rate, persisted in localStorage).
 export function ProjectSummary() {
   const rooms = useStore((s) => s.project.rooms)
+  const project = useStore((s) => s.project)
+  const itemCount = useStore((s) => s.project.items.length)
   const [rate, setRate] = useState<number>(() => {
     const v = Number(localStorage.getItem(RATE_KEY))
     return Number.isFinite(v) && v > 0 ? v : DEFAULT_RATE
@@ -17,6 +21,7 @@ export function ProjectSummary() {
 
   const areas = rooms.map((r) => ({ name: r.name, area: Math.abs(polygonArea(r.loop)) }))
   const total = areas.reduce((s, a) => s + a.area, 0)
+  const furniture = furnitureTotal(project)
 
   function updateRate(v: number) {
     setRate(v)
@@ -24,6 +29,7 @@ export function ProjectSummary() {
   }
 
   return (
+    <>
     <Section title="Areas & estimate">
       {areas.length === 0 ? (
         <p className="text-[11px] text-neutral-500">
@@ -71,5 +77,33 @@ export function ProjectSummary() {
         </>
       )}
     </Section>
+
+    <Section title="Furniture">
+      {itemCount === 0 ? (
+        <p className="text-[11px] text-neutral-500">
+          Add furniture in the Design view to build a shopping list.
+        </p>
+      ) : (
+        <>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-neutral-300">{itemCount} item{itemCount === 1 ? '' : 's'}</span>
+            <span className="text-sm font-semibold text-emerald-300">
+              S${Math.round(furniture).toLocaleString()}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => exportShoppingListCSV(project)}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded bg-panel2 py-2 text-[11px] text-neutral-300 hover:bg-edge"
+          >
+            <Download size={13} /> Export shopping list (CSV)
+          </button>
+          <p className="mt-1 text-[10px] leading-tight text-neutral-500">
+            Ballpark prices per item — edit the CSV with your real quotes.
+          </p>
+        </>
+      )}
+    </Section>
+    </>
   )
 }

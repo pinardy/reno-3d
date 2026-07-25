@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Move, RotateCw, Info, Ruler, Map, Building2, PencilRuler } from 'lucide-react'
+import { Move, RotateCw, Info, Ruler, Map, Building2, PencilRuler, Sun } from 'lucide-react'
 import { SceneRoot, type GroundPicker } from './SceneRoot'
 import { useStore, storeApi } from '../../store/store'
 import { catalogById, newItemFromCatalog } from '../catalog/catalog'
 import { makeSampleProject } from '../sample/sample'
+import { TEMPLATES } from '../sample/templates'
 import { exportFloorPlanPNG } from '../persistence/floorplanExport'
 
 export function DesignView() {
@@ -13,6 +14,7 @@ export function DesignView() {
   const [showDimensions, setShowDimensions] = useState(false)
   const [dollhouse, setDollhouse] = useState(false)
   const [measure, setMeasure] = useState(false)
+  const [timeOfDay, setTimeOfDay] = useState(0.5)
   const cameraMode = useStore((s) => s.cameraMode)
   const hasContent = useStore(
     (s) => s.project.walls.length > 0 || s.project.items.length > 0,
@@ -48,6 +50,7 @@ export function DesignView() {
           showDimensions={showDimensions}
           dollhouse={dollhouse}
           measure={measure}
+          timeOfDay={timeOfDay}
         />
       </Canvas>
 
@@ -117,6 +120,22 @@ export function DesignView() {
             <Map size={14} /> Floor plan
           </button>
         </div>
+        {/* time of day */}
+        <div
+          className="flex items-center gap-2 rounded-lg bg-panel/90 px-2.5 py-1.5 backdrop-blur"
+          title="Time of day — drag from night to midday"
+        >
+          <Sun size={14} className="text-amber-300" />
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.02}
+            value={timeOfDay}
+            onChange={(e) => setTimeOfDay(parseFloat(e.target.value))}
+            className="w-24"
+          />
+        </div>
       </div>
 
       {/* hints */}
@@ -137,13 +156,25 @@ export function DesignView() {
               Switch to <span className="text-accent">Trace 2D</span> and draw some
               walls — they'll appear here in 3D.
             </p>
-            <button
-              type="button"
-              onClick={() => useStore.getState().loadProject(makeSampleProject())}
-              className="mt-3 rounded bg-accent/15 px-3 py-1.5 text-xs font-medium text-accent ring-1 ring-accent/30 hover:bg-accent/25"
-            >
-              ✨ Load sample home
-            </button>
+            <div className="mt-3 flex items-center justify-center gap-1.5">
+              {TEMPLATES.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => useStore.getState().loadProject(t.make())}
+                  className="rounded bg-panel2 px-2.5 py-1.5 text-xs font-medium text-neutral-200 ring-1 ring-edge hover:bg-edge"
+                >
+                  {t.name.replace('HDB ', '')}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => useStore.getState().loadProject(makeSampleProject())}
+                className="rounded bg-accent/15 px-2.5 py-1.5 text-xs font-medium text-accent ring-1 ring-accent/30 hover:bg-accent/25"
+              >
+                ✨ Sample
+              </button>
+            </div>
           </div>
         </div>
       )}

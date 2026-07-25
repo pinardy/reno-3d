@@ -24,6 +24,7 @@ import {
 } from '../../types/project'
 import { detectRoomLoops } from './rooms'
 import { makeSampleProject } from '../sample/sample'
+import { TEMPLATES } from '../sample/templates'
 
 const TOOLS: { id: TraceTool; label: string; key: string; icon: ReactNode }[] = [
   { id: 'select', label: 'Select', key: 'V', icon: <MousePointer2 size={15} /> },
@@ -98,15 +99,28 @@ export function TraceToolsPanel() {
     <div>
       {isEmpty && (
         <Section title="Get started">
+          <p className="mb-1.5 text-[11px] text-neutral-500">Start from an HDB layout:</p>
+          <div className="grid grid-cols-3 gap-1">
+            {TEMPLATES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => loadProject(t.make())}
+                className="rounded bg-panel2 px-1 py-2 text-[11px] font-medium text-neutral-200 ring-1 ring-edge hover:bg-edge"
+              >
+                {t.name.replace('HDB ', '')}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             onClick={() => loadProject(makeSampleProject())}
-            className="w-full rounded bg-accent/15 px-2 py-2 text-xs font-medium text-accent ring-1 ring-accent/30 hover:bg-accent/25"
+            className="mt-2 w-full rounded bg-accent/15 px-2 py-2 text-xs font-medium text-accent ring-1 ring-accent/30 hover:bg-accent/25"
           >
-            ✨ Load sample home
+            ✨ Sample home
           </button>
           <p className="mt-1.5 text-[11px] text-neutral-500">
-            Or upload your floor plan below and trace the walls.
+            Or upload your own floor plan below and trace the walls.
           </p>
         </Section>
       )}

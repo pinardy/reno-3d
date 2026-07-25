@@ -36,7 +36,12 @@ export function OpeningsGroup({
             {op.type === 'window' ? (
               <Window w={op.width} h={op.height} sill={op.sillHeight} t={wall.thickness} />
             ) : (
-              <Door w={op.width} h={op.height} t={wall.thickness} />
+              <Door
+                w={op.width}
+                h={op.height}
+                t={wall.thickness}
+                hinge={op.hinge ?? 'left'}
+              />
             )}
           </group>
         )
@@ -87,9 +92,20 @@ function Window({ w, h, sill, t }: { w: number; h: number; sill: number; t: numb
   )
 }
 
-function Door({ w, h, t }: { w: number; h: number; t: number }) {
+function Door({
+  w,
+  h,
+  t,
+  hinge = 'left',
+}: {
+  w: number
+  h: number
+  t: number
+  hinge?: 'left' | 'right'
+}) {
   const fd = t * 1.05
   const leafW = w - BAR
+  const s = hinge === 'left' ? 1 : -1 // mirror the leaf for a right-hand hinge
   return (
     <group>
       {/* frame (top + jambs, no sill) */}
@@ -105,14 +121,14 @@ function Door({ w, h, t }: { w: number; h: number; t: number }) {
         <boxGeometry args={[BAR, h, fd]} />
         <meshStandardMaterial {...FRAME} />
       </mesh>
-      {/* leaf, hinged on the left and swung ajar */}
-      <group position={[-w / 2 + 0.02, 0, 0]} rotation={[0, -0.55, 0]}>
-        <mesh position={[leafW / 2, (h - 0.06) / 2, 0]} castShadow>
+      {/* leaf, hinged on the chosen side and swung ajar */}
+      <group position={[s * (-w / 2 + 0.02), 0, 0]} rotation={[0, s * -0.55, 0]}>
+        <mesh position={[s * (leafW / 2), (h - 0.06) / 2, 0]} castShadow>
           <boxGeometry args={[leafW, h - 0.06, 0.045]} />
           <meshStandardMaterial {...WOOD} />
         </mesh>
         {/* handle */}
-        <mesh position={[leafW - 0.08, h * 0.5, 0.04]} castShadow>
+        <mesh position={[s * (leafW - 0.08), h * 0.5, 0.04]} castShadow>
           <boxGeometry args={[0.04, 0.12, 0.03]} />
           <meshStandardMaterial color="#c8ccd0" metalness={0.8} roughness={0.25} />
         </mesh>

@@ -24,6 +24,40 @@ export interface CatalogEntry {
   material: Material
   params?: Record<string, number | string | boolean>
   baseY?: number // default vertical lift (wall art, range hoods, counter items)
+  price?: number // rough S$; falls back to PRICE_BY_KIND
+}
+
+// Rough S$ prices by kind, used when an entry has no explicit price. These are
+// ballpark figures for a budget estimate, not real quotes.
+const PRICE_BY_KIND: Record<ItemKind, number> = {
+  sofa: 900,
+  bed: 800,
+  table: 350,
+  chair: 80,
+  wardrobe: 650,
+  rug: 180,
+  lamp: 90,
+  cabinet: 300,
+  shelf: 250,
+  stool: 70,
+  tv: 900,
+  toilet: 250,
+  sink: 350,
+  bathtub: 900,
+  pendant: 120,
+  piano: 4000,
+  vase: 60,
+  plant: 80,
+  picture: 120,
+  appliance: 600,
+  hood: 450,
+  shower: 800,
+  toiletries: 40,
+  glb: 0,
+}
+
+export function catalogPrice(entry: CatalogEntry): number {
+  return entry.price ?? PRICE_BY_KIND[entry.kind] ?? 100
 }
 
 export const CATALOG: CatalogEntry[] = [
@@ -121,6 +155,7 @@ export const CATALOG: CatalogEntry[] = [
   },
   {
     id: 'dining-table',
+    price: 600,
     kind: 'table',
     name: 'Dining Table',
     category: 'Dining',
@@ -155,6 +190,7 @@ export const CATALOG: CatalogEntry[] = [
   },
   {
     id: 'fridge',
+    price: 1200,
     kind: 'wardrobe',
     name: 'Fridge',
     category: 'Kitchen',
@@ -333,6 +369,7 @@ export const CATALOG: CatalogEntry[] = [
   },
   {
     id: 'sectional-sofa',
+    price: 1600,
     kind: 'sofa',
     name: 'L-Sectional Sofa',
     category: 'Living',
@@ -342,6 +379,7 @@ export const CATALOG: CatalogEntry[] = [
   },
   {
     id: 'piano',
+    price: 4500,
     kind: 'piano',
     name: 'Upright Piano',
     category: 'Living',
@@ -387,6 +425,7 @@ export const CATALOG: CatalogEntry[] = [
   // ===== Bedroom (more) =====
   {
     id: 'bed-king',
+    price: 1200,
     kind: 'bed',
     name: 'King Bed',
     category: 'Bedroom',
