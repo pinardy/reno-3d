@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Move, RotateCw, Info, Ruler, Map, Building2, PencilRuler, Sun, SquareStack } from 'lucide-react'
+import { Move, RotateCw, Info, Ruler, Map, Building2, PencilRuler, Sun, SquareStack, Sparkles } from 'lucide-react'
 import { SceneRoot, type GroundPicker } from './SceneRoot'
 import { Compass } from './Compass'
 import { useStore, storeApi } from '../../store/store'
@@ -16,6 +16,7 @@ export function DesignView() {
   const [dollhouse, setDollhouse] = useState(false)
   const [measure, setMeasure] = useState(false)
   const [showCeilings, setShowCeilings] = useState(false)
+  const [hq, setHq] = useState(true)
   const [timeOfDay, setTimeOfDay] = useState(0.5)
   const cameraMode = useStore((s) => s.cameraMode)
   const hasContent = useStore(
@@ -54,6 +55,7 @@ export function DesignView() {
           measure={measure}
           timeOfDay={timeOfDay}
           showCeilings={showCeilings}
+          hq={hq}
         />
       </Canvas>
 
@@ -123,6 +125,16 @@ export function DesignView() {
             }`}
           >
             <SquareStack size={14} /> Ceilings
+          </button>
+          <button
+            type="button"
+            title="High-quality rendering (ambient occlusion, bloom, anti-aliasing)"
+            onClick={() => setHq((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ${
+              hq ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
+            }`}
+          >
+            <Sparkles size={14} /> HQ
           </button>
           <button
             type="button"

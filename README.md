@@ -42,8 +42,12 @@ Other scripts: `npm run build` (production build), `npm run preview`.
    texture on the right. "Apply colour to all walls" repaints the whole home.
 9. **View, light & measure** (3D toolbar) — **Dimensions** overlays wall lengths and
    room areas · **Dollhouse** cuts the walls down for a top-down look inside ·
-   **Measure** clicks two points for a distance · the **time-of-day** slider drives the
-   sun/sky and turns on room lights at night. Doors have a **hinge-side** control.
+   **Measure** clicks two points for a distance · **Ceilings** and **HQ** (ambient
+   occlusion + bloom) toggles · the **time-of-day** slider + **compass** drive the
+   sun to real directions (see which rooms get afternoon sun). Doors have a
+   **hinge-side** control; openings can be door / window / cased / sliding. HDB
+   fixtures (household shelter, gate, bay window, aircon ledge) live under the **HDB**
+   catalog category.
 10. **Budget** — the right panel shows per-room + total floor area with a rough reno
     estimate, plus a **furniture total** and a **shopping-list CSV export** (ballpark
     per-item prices you can replace with real quotes).

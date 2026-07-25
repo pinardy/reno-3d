@@ -14,6 +14,7 @@ import { WallsGroup, CornerPosts } from './Walls'
 import { RoomFloor } from './Floors'
 import { ItemsGroup } from './Items'
 import { WalkControls } from './controls'
+import { Effects } from './Effects'
 
 // Bridge so the HTML layer (drag-drop) can convert screen coords to a floor point.
 export type GroundPicker = (clientX: number, clientY: number) => Vec2 | null
@@ -26,6 +27,7 @@ export function SceneRoot({
   measure,
   timeOfDay,
   showCeilings,
+  hq,
 }: {
   pickerRef: React.MutableRefObject<GroundPicker | null>
   gizmoMode: 'move' | 'rotate'
@@ -34,6 +36,7 @@ export function SceneRoot({
   measure: boolean
   timeOfDay: number // 0..1, 0.5 = midday
   showCeilings: boolean
+  hq: boolean
 }) {
   const walls = useStore((s) => s.project.walls)
   const rooms = useStore((s) => s.project.rooms)
@@ -166,6 +169,8 @@ export function SceneRoot({
       ) : (
         <WalkControls />
       )}
+
+      {hq && <Effects />}
     </>
   )
 }
