@@ -33,8 +33,13 @@ export function usePersistence() {
     }
 
     // 1. restore the most recently used project before enabling saves
+    // (skip if the URL carries a share link — useShareImport handles that)
     ;(async () => {
       try {
+        if (location.hash.startsWith('#s=')) {
+          ready = true
+          return
+        }
         const id = await lastProjectId()
         if (cancelled) return
         if (id) {

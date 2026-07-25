@@ -13,12 +13,17 @@ import {
   Check,
   Cloud,
   HelpCircle,
+  FileText,
+  Boxes,
+  Share2,
 } from 'lucide-react'
 import { useStore } from '../store/store'
 import { IconBtn } from './ui'
 import { exportProjectFile, importProjectFile } from '../features/persistence/io'
-import { requestScreenshot } from '../features/scene/screenshot'
+import { requestScreenshot, exportHomeGltf } from '../features/scene/screenshot'
 import { exportFloorPlanPNG } from '../features/persistence/floorplanExport'
+import { openSpecSheet } from '../features/persistence/specSheet'
+import { copyShareLink } from '../features/persistence/share'
 import { ProjectsMenu } from '../features/persistence/ProjectsMenu'
 
 export function Toolbar() {
@@ -133,10 +138,22 @@ export function Toolbar() {
 
       <ProjectsMenu />
       <IconBtn
+        title="Print / save PDF spec sheet (plan + render + budget)"
+        onClick={() => openSpecSheet(project)}
+      >
+        <FileText size={15} />
+      </IconBtn>
+      <IconBtn
         title="Export top-down floor plan (PNG)"
         onClick={() => exportFloorPlanPNG(project)}
       >
         <Map size={15} />
+      </IconBtn>
+      <IconBtn title="Export 3D model (.glb)" onClick={() => exportHomeGltf()}>
+        <Boxes size={15} />
+      </IconBtn>
+      <IconBtn title="Copy a shareable design link" onClick={() => copyShareLink(project)}>
+        <Share2 size={15} />
       </IconBtn>
       <IconBtn title="Export project (.json)" onClick={() => exportProjectFile(project)}>
         <Download size={15} />

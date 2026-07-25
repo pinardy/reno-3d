@@ -6,6 +6,7 @@ import { HelpPanel } from './app/HelpPanel'
 import { TraceEditor } from './features/trace/TraceEditor'
 import { useStore } from './store/store'
 import { usePersistence } from './features/persistence/autosave'
+import { useShareImport } from './features/persistence/share'
 import { useKeyboardShortcuts } from './app/useKeyboardShortcuts'
 
 // The 3D view pulls in three.js / R3F / drei — load it on demand so the initial
@@ -17,6 +18,7 @@ const DesignView = lazy(() =>
 export default function App() {
   const editorMode = useStore((s) => s.editorMode)
 
+  useShareImport()
   usePersistence()
   useKeyboardShortcuts()
 

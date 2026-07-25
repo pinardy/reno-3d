@@ -2,9 +2,10 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
 import { OrbitControls, Grid, ContactShadows } from '@react-three/drei'
+import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
 import { useStore } from '../../store/store'
 import type { Vec2 } from '../../types/project'
-import { registerCapturer } from './screenshot'
+import { registerCapturer, registerHomeExporter } from './screenshot'
 import { DimensionLabels } from './DimensionLabels'
 import { OpeningsGroup } from './Openings'
 import { MeasureTool } from './MeasureTool'
@@ -40,10 +41,11 @@ export function SceneRoot({
 
   const { camera, gl, raycaster, scene } = useThree()
   const groundRef = useRef<THREE.Mesh>(null)
+  const homeRef = useRef<THREE.Group>(null)
   // third-party OrbitControls ref (typed `any` at this boundary only)
   const orbitRef = useRef<any>(null)
 
-  // register the ground picker + screenshot capturer
+  // register the ground picker + screenshot capturer + glTF exporter
   useEffect(() => {
     pickerRef.current = (clientX, clientY) => intersectGround(clientX, clientY)
     registerCapturer(() => {
@@ -54,9 +56,27 @@ export function SceneRoot({
         return null
       }
     })
+    registerHomeExporter(() => {
+      if (!homeRef.current) return
+      new GLTFExporter().parse(
+        homeRef.current,
+        (result) => {
+          const blob = new Blob([result as ArrayBuffer], { type: 'model/gltf-binary' })
+          const name = useStore.getState().project.name.replace(/[^\w-]+/g, '_') || 'home'
+          const a = document.createElement('a')
+          a.href = URL.createObjectURL(blob)
+          a.download = `${name}.glb`
+          a.click()
+          URL.revokeObjectURL(a.href)
+        },
+        (err) => console.error('glTF export failed', err),
+        { binary: true },
+      )
+    })
     return () => {
       pickerRef.current = null
       registerCapturer(null)
+      registerHomeExporter(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -110,23 +130,25 @@ export function SceneRoot({
         <meshStandardMaterial color="#9aa1a8" roughness={1} transparent opacity={0} />
       </mesh>
 
-      <WallsGroup walls={walls} dollhouse={dollhouse} />
-      <CornerPosts walls={walls} dollhouse={dollhouse} />
-      <OpeningsGroup walls={walls} openings={openings} dollhouse={dollhouse} />
-      {rooms.map((room) => (
-        <RoomFloor key={room.id} room={room} />
-      ))}
+      {/* home content — this group is what gets exported to glTF */}
+      <group ref={homeRef}>
+        <WallsGroup walls={walls} dollhouse={dollhouse} />
+        <CornerPosts walls={walls} dollhouse={dollhouse} />
+        <OpeningsGroup walls={walls} openings={openings} dollhouse={dollhouse} />
+        {rooms.map((room) => (
+          <RoomFloor key={room.id} room={room} />
+        ))}
+        <ItemsGroup
+          items={items}
+          orbitRef={orbitRef}
+          intersectGround={intersectGround}
+          gizmoMode={gizmoMode}
+          enabled={cameraMode === 'orbit' && !measure}
+        />
+      </group>
 
       {showDimensions && <DimensionLabels />}
       {measure && cameraMode === 'orbit' && <MeasureTool />}
-
-      <ItemsGroup
-        items={items}
-        orbitRef={orbitRef}
-        intersectGround={intersectGround}
-        gizmoMode={gizmoMode}
-        enabled={cameraMode === 'orbit' && !measure}
-      />
 
       {cameraMode === 'orbit' ? (
         <OrbitControls
