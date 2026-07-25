@@ -74,6 +74,7 @@ export type ItemKind =
   | 'hood' // kitchen range hood
   | 'shower' // glass shower stall
   | 'toiletries' // small bottles cluster
+  | 'curtain' // curtains / blinds panel
   | 'glb' // external model
 
 export interface Item {

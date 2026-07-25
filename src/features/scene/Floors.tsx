@@ -4,7 +4,13 @@ import type { Room } from '../../types/project'
 import { buildFloorGeometry } from '../../geometry/floor'
 import { SurfaceMaterial } from '../materials/SurfaceMaterial'
 
-export const RoomFloor = memo(function RoomFloor({ room }: { room: Room }) {
+export const RoomFloor = memo(function RoomFloor({
+  room,
+  ceiling,
+}: {
+  room: Room
+  ceiling: boolean // force-show ceiling regardless of the room's own flag
+}) {
   const select = useStore((s) => s.select)
   const selection = useStore((s) => s.selection)
   const wallHeight = useStore((s) => s.project.wallHeight)
@@ -14,6 +20,7 @@ export const RoomFloor = memo(function RoomFloor({ room }: { room: Room }) {
     [room.loop, wallHeight],
   )
   const sel = selection.type === 'room' && selection.id === room.id
+  const showCeiling = ceiling || room.showCeiling
   return (
     <group>
       <mesh
@@ -28,7 +35,7 @@ export const RoomFloor = memo(function RoomFloor({ room }: { room: Room }) {
           material={sel ? { ...room.floorMaterial, color: '#6f9bff' } : room.floorMaterial}
         />
       </mesh>
-      {room.showCeiling && (
+      {showCeiling && (
         <mesh geometry={ceilGeom} receiveShadow>
           <SurfaceMaterial material={room.ceilingMaterial} />
         </mesh>

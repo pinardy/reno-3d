@@ -53,6 +53,7 @@ const PRICE_BY_KIND: Record<ItemKind, number> = {
   hood: 450,
   shower: 800,
   toiletries: 40,
+  curtain: 150,
   glb: 0,
 }
 
@@ -372,6 +373,46 @@ export const CATALOG: CatalogEntry[] = [
     category: 'Decor',
     size: { w: 0.35, d: 0.35, h: 0.4 },
     material: makeMaterial({ color: '#2b2b2f', roughness: 0.5, metalness: 0.3 }),
+  },
+  {
+    id: 'curtains',
+    kind: 'curtain',
+    name: 'Curtains',
+    category: 'Decor',
+    size: { w: 1.6, d: 0.1, h: 2.4 },
+    material: makeMaterial({ color: '#cfc6b8', roughness: 0.95, texture: 'fabric' }),
+  },
+  {
+    id: 'blinds',
+    kind: 'curtain',
+    name: 'Blinds',
+    category: 'Decor',
+    size: { w: 1.2, d: 0.06, h: 1.3 },
+    material: makeMaterial({ color: '#d8d2c4', roughness: 0.7 }),
+    params: { blinds: true },
+    baseY: 0.9,
+  },
+
+  // --- Built-in carpentry ---
+  {
+    id: 'built-in-wardrobe',
+    kind: 'wardrobe',
+    name: 'Built-in Wardrobe',
+    category: 'Bedroom',
+    size: { w: 2.4, d: 0.6, h: 2.4 },
+    material: makeMaterial({ color: '#c9b79a', roughness: 0.5, texture: 'wood' }),
+    params: { doors: 4 },
+    price: 2500,
+  },
+  {
+    id: 'kitchen-island',
+    kind: 'cabinet',
+    name: 'Kitchen Island',
+    category: 'Kitchen',
+    size: { w: 1.6, d: 0.9, h: 0.9 },
+    material: makeMaterial({ color: '#e8e4dc', roughness: 0.4 }),
+    params: { width: 1.6, depth: 0.9, height: 0.9, doors: 3, counter: true },
+    price: 2000,
   },
 
   // ===== Living (more) =====

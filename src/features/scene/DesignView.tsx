@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Move, RotateCw, Info, Ruler, Map, Building2, PencilRuler, Sun } from 'lucide-react'
+import { Move, RotateCw, Info, Ruler, Map, Building2, PencilRuler, Sun, SquareStack } from 'lucide-react'
 import { SceneRoot, type GroundPicker } from './SceneRoot'
 import { useStore, storeApi } from '../../store/store'
 import { catalogById, newItemFromCatalog } from '../catalog/catalog'
@@ -14,6 +14,7 @@ export function DesignView() {
   const [showDimensions, setShowDimensions] = useState(false)
   const [dollhouse, setDollhouse] = useState(false)
   const [measure, setMeasure] = useState(false)
+  const [showCeilings, setShowCeilings] = useState(false)
   const [timeOfDay, setTimeOfDay] = useState(0.5)
   const cameraMode = useStore((s) => s.cameraMode)
   const hasContent = useStore(
@@ -51,6 +52,7 @@ export function DesignView() {
           dollhouse={dollhouse}
           measure={measure}
           timeOfDay={timeOfDay}
+          showCeilings={showCeilings}
         />
       </Canvas>
 
@@ -110,6 +112,16 @@ export function DesignView() {
             }`}
           >
             <PencilRuler size={14} /> Measure
+          </button>
+          <button
+            type="button"
+            title="Show ceilings on all rooms"
+            onClick={() => setShowCeilings((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ${
+              showCeilings ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
+            }`}
+          >
+            <SquareStack size={14} /> Ceilings
           </button>
           <button
             type="button"

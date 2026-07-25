@@ -253,6 +253,59 @@ export function TV({ w, h, m }: { w: number; h: number; m: Material }) {
 }
 
 
+export function Curtain({
+  w,
+  h,
+  blinds = false,
+  m,
+}: {
+  w: number
+  h: number
+  blinds?: boolean
+  m: Material
+}) {
+  if (blinds) {
+    const n = Math.max(3, Math.round(h / 0.12))
+    return (
+      <group>
+        {/* headrail */}
+        <mesh position={[0, h - 0.03, 0]} castShadow>
+          <boxGeometry args={[w, 0.06, 0.06]} />
+          <meshStandardMaterial color="#d7d3c8" roughness={0.6} />
+        </mesh>
+        {/* slats */}
+        {Array.from({ length: n }).map((_, i) => (
+          <mesh key={i} position={[0, (h * (i + 0.5)) / n, 0]} rotation={[0.3, 0, 0]} castShadow>
+            <boxGeometry args={[w - 0.04, 0.09, 0.012]} />
+            <Mat material={m} />
+          </mesh>
+        ))}
+      </group>
+    )
+  }
+  // gathered fabric curtain: several vertical folds
+  const folds = Math.max(4, Math.round(w / 0.18))
+  const fw = w / folds
+  return (
+    <group>
+      <mesh position={[0, h - 0.02, 0]} castShadow>
+        <boxGeometry args={[w + 0.1, 0.05, 0.08]} />
+        <meshStandardMaterial color="#8a8378" metalness={0.4} roughness={0.5} />
+      </mesh>
+      {Array.from({ length: folds }).map((_, i) => (
+        <mesh
+          key={i}
+          position={[-w / 2 + fw * (i + 0.5), h / 2, (i % 2 === 0 ? 0.03 : -0.03)]}
+          castShadow
+        >
+          <boxGeometry args={[fw * 0.96, h, 0.05]} />
+          <Mat material={m} repeat={[1, 2]} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
 export function GLBModel({ url }: { url: string; m: Material }) {
   const { scene } = useGLTF(url)
   return <primitive object={scene.clone()} />

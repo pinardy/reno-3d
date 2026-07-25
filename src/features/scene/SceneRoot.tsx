@@ -25,6 +25,7 @@ export function SceneRoot({
   dollhouse,
   measure,
   timeOfDay,
+  showCeilings,
 }: {
   pickerRef: React.MutableRefObject<GroundPicker | null>
   gizmoMode: 'move' | 'rotate'
@@ -32,6 +33,7 @@ export function SceneRoot({
   dollhouse: boolean
   measure: boolean
   timeOfDay: number // 0..1, 0.5 = midday
+  showCeilings: boolean
 }) {
   const walls = useStore((s) => s.project.walls)
   const rooms = useStore((s) => s.project.rooms)
@@ -136,7 +138,7 @@ export function SceneRoot({
         <CornerPosts walls={walls} dollhouse={dollhouse} />
         <OpeningsGroup walls={walls} openings={openings} dollhouse={dollhouse} />
         {rooms.map((room) => (
-          <RoomFloor key={room.id} room={room} />
+          <RoomFloor key={room.id} room={room} ceiling={showCeilings} />
         ))}
         <ItemsGroup
           items={items}
