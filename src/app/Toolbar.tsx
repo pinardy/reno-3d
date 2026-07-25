@@ -10,6 +10,8 @@ import {
   Orbit,
   PersonStanding,
   Map,
+  Check,
+  Cloud,
 } from 'lucide-react'
 import { useStore } from '../store/store'
 import { IconBtn } from './ui'
@@ -31,6 +33,7 @@ export function Toolbar() {
   const renameProject = useStore((s) => s.renameProject)
   const project = useStore((s) => s.project)
   const loadProject = useStore((s) => s.loadProject)
+  const saveState = useStore((s) => s.saveState)
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-edge bg-panel px-3">
@@ -103,6 +106,21 @@ export function Toolbar() {
 
       {/* spacer */}
       <div className="flex-1" />
+
+      <span
+        title="Your work is saved automatically in this browser"
+        className="flex items-center gap-1 text-[11px] text-neutral-500"
+      >
+        {saveState === 'saving' ? (
+          <>
+            <Cloud size={13} className="animate-pulse" /> Saving…
+          </>
+        ) : (
+          <>
+            <Check size={13} className="text-emerald-400" /> Saved locally
+          </>
+        )}
+      </span>
 
       <input
         value={name}

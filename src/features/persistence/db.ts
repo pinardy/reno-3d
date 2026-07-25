@@ -4,9 +4,9 @@ import type { Project } from '../../types/project'
 const PREFIX = 'reno:project:'
 const LAST_KEY = 'reno:lastProjectId'
 
-export async function saveProject(p: Project): Promise<void> {
+export async function saveProject(p: Project, setLast = true): Promise<void> {
   await set(PREFIX + p.id, p)
-  await set(LAST_KEY, p.id)
+  if (setLast) await set(LAST_KEY, p.id)
 }
 
 export async function loadProject(id: string): Promise<Project | undefined> {

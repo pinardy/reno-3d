@@ -48,7 +48,7 @@ export function ProjectsMenu() {
       name: `${p.name} copy`,
       updatedAt: Date.now(),
     }
-    await saveProject(copy)
+    await saveProject(copy, false) // don't move the "last opened" pointer
     refresh()
   }
 

@@ -5,14 +5,13 @@ import { RightPanel } from './app/RightPanel'
 import { TraceEditor } from './features/trace/TraceEditor'
 import { DesignView } from './features/scene/DesignView'
 import { useStore } from './store/store'
-import { useAutosave, useLoadLast } from './features/persistence/autosave'
+import { usePersistence } from './features/persistence/autosave'
 import { useKeyboardShortcuts } from './app/useKeyboardShortcuts'
 
 export default function App() {
   const editorMode = useStore((s) => s.editorMode)
 
-  useLoadLast()
-  useAutosave()
+  usePersistence()
   useKeyboardShortcuts()
 
   useEffect(() => {

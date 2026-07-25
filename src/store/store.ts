@@ -26,6 +26,9 @@ interface AppState {
   tool: TraceTool
   selection: Selection
   cameraMode: CameraMode
+  saveState: 'idle' | 'saving' | 'saved'
+
+  setSaveState: (s: 'idle' | 'saving' | 'saved') => void
 
   // ----- meta / mode -----
   setEditorMode: (m: EditorMode) => void
@@ -64,6 +67,9 @@ export const useStore = create<AppState>((set, get) => ({
   tool: 'select',
   selection: { type: null, id: null },
   cameraMode: 'orbit',
+  saveState: 'idle',
+
+  setSaveState: (s) => set({ saveState: s }),
 
   setEditorMode: (m) => set({ editorMode: m }),
   setTool: (t) => set({ tool: t, selection: { type: null, id: null } }),
