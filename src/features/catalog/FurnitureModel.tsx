@@ -26,6 +26,8 @@ import {
   Pendant,
   TV,
   Curtain,
+  Shelter,
+  Gate,
   GLBModel,
 } from './models'
 
@@ -108,6 +110,10 @@ export function FurnitureModel({ item }: { item: Item }) {
       return <Toiletries m={m} />
     case 'curtain':
       return <Curtain w={size.w} h={size.h} blinds={bool(item.params?.blinds, false)} m={m} />
+    case 'shelter':
+      return <Shelter w={size.w} d={size.d} h={size.h} m={m} />
+    case 'gate':
+      return <Gate w={size.w} h={size.h} m={m} />
     case 'glb':
       return item.modelUrl ? (
         <Suspense fallback={null}>

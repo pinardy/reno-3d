@@ -14,6 +14,7 @@ export type Category =
   | 'Bathroom'
   | 'Office'
   | 'Decor'
+  | 'HDB'
 
 export interface CatalogEntry {
   id: string
@@ -54,6 +55,8 @@ const PRICE_BY_KIND: Record<ItemKind, number> = {
   shower: 800,
   toiletries: 40,
   curtain: 150,
+  shelter: 0,
+  gate: 400,
   glb: 0,
 }
 
@@ -641,6 +644,51 @@ export const CATALOG: CatalogEntry[] = [
     baseY: 1.2,
     params: { mirror: true, round: true },
   },
+
+  // ===== HDB-specific fixtures =====
+  {
+    id: 'household-shelter',
+    kind: 'shelter',
+    name: 'Household Shelter',
+    category: 'HDB',
+    size: { w: 1.5, d: 1.4, h: 2.4 },
+    material: makeMaterial({ color: '#b9bcc0', roughness: 0.9, texture: 'concrete' }),
+  },
+  {
+    id: 'hdb-gate',
+    kind: 'gate',
+    name: 'Metal Gate',
+    category: 'HDB',
+    size: { w: 1.0, d: 0.06, h: 2.1 },
+    material: makeMaterial({ color: '#3a3f47', roughness: 0.4, metalness: 0.7 }),
+  },
+  {
+    id: 'bay-window-seat',
+    kind: 'wardrobe',
+    name: 'Bay Window Seat',
+    category: 'HDB',
+    size: { w: 1.6, d: 0.5, h: 0.5 },
+    material: makeMaterial({ color: '#d8cbb2', roughness: 0.5, texture: 'wood' }),
+    params: { doors: 3 },
+  },
+  {
+    id: 'aircon-ledge',
+    kind: 'wardrobe',
+    name: 'Aircon Ledge',
+    category: 'HDB',
+    size: { w: 1.2, d: 0.55, h: 0.35 },
+    material: makeMaterial({ color: '#c7cacd', roughness: 0.8 }),
+    params: { doors: 1 },
+  },
+  {
+    id: 'planter-box',
+    kind: 'wardrobe',
+    name: 'Planter Box',
+    category: 'HDB',
+    size: { w: 1.0, d: 0.4, h: 0.4 },
+    material: makeMaterial({ color: '#7a5a3a', roughness: 0.9 }),
+    params: { doors: 1 },
+  },
 ]
 
 export const CATEGORIES: Category[] = [
@@ -651,6 +699,7 @@ export const CATEGORIES: Category[] = [
   'Bathroom',
   'Office',
   'Decor',
+  'HDB',
 ]
 
 export function catalogById(id: string): CatalogEntry | undefined {

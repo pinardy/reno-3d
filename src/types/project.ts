@@ -28,7 +28,7 @@ export interface Wall {
   material: Material
 }
 
-export type OpeningType = 'door' | 'window'
+export type OpeningType = 'door' | 'window' | 'cased' | 'sliding'
 
 export interface Opening {
   id: string
@@ -75,6 +75,8 @@ export type ItemKind =
   | 'shower' // glass shower stall
   | 'toiletries' // small bottles cluster
   | 'curtain' // curtains / blinds panel
+  | 'shelter' // HDB household shelter (bomb shelter)
+  | 'gate' // HDB metal gate
   | 'glb' // external model
 
 export interface Item {

@@ -36,13 +36,12 @@ export const OpeningsGroup = memo(function OpeningsGroup({
           <group key={op.id} position={[cx, 0, cz]} rotation={[0, -angle, 0]}>
             {op.type === 'window' ? (
               <Window w={op.width} h={op.height} sill={op.sillHeight} t={wall.thickness} />
+            ) : op.type === 'cased' ? (
+              <CasedOpening w={op.width} h={op.height} t={wall.thickness} />
+            ) : op.type === 'sliding' ? (
+              <SlidingDoor w={op.width} h={op.height} t={wall.thickness} />
             ) : (
-              <Door
-                w={op.width}
-                h={op.height}
-                t={wall.thickness}
-                hinge={op.hinge ?? 'left'}
-              />
+              <Door w={op.width} h={op.height} t={wall.thickness} hinge={op.hinge ?? 'left'} />
             )}
           </group>
         )
@@ -89,6 +88,67 @@ function Window({ w, h, sill, t }: { w: number; h: number; sill: number; t: numb
           metalness={0.1}
         />
       </mesh>
+    </group>
+  )
+}
+
+// A cased opening: just the frame, no leaf (open-concept doorway).
+function CasedOpening({ w, h, t }: { w: number; h: number; t: number }) {
+  const fd = t * 1.05
+  return (
+    <group>
+      <mesh position={[0, h, 0]} castShadow>
+        <boxGeometry args={[w, BAR, fd]} />
+        <meshStandardMaterial {...FRAME} />
+      </mesh>
+      <mesh position={[-w / 2, h / 2, 0]} castShadow>
+        <boxGeometry args={[BAR, h, fd]} />
+        <meshStandardMaterial {...FRAME} />
+      </mesh>
+      <mesh position={[w / 2, h / 2, 0]} castShadow>
+        <boxGeometry args={[BAR, h, fd]} />
+        <meshStandardMaterial {...FRAME} />
+      </mesh>
+    </group>
+  )
+}
+
+// A sliding door: two overlapping panels on a track (e.g. to a balcony/yard).
+function SlidingDoor({ w, h, t }: { w: number; h: number; t: number }) {
+  const fd = t * 1.05
+  const panelW = w / 2
+  return (
+    <group>
+      {/* frame */}
+      <mesh position={[0, h, 0]} castShadow>
+        <boxGeometry args={[w, BAR, fd]} />
+        <meshStandardMaterial {...FRAME} />
+      </mesh>
+      <mesh position={[-w / 2, h / 2, 0]} castShadow>
+        <boxGeometry args={[BAR, h, fd]} />
+        <meshStandardMaterial {...FRAME} />
+      </mesh>
+      <mesh position={[w / 2, h / 2, 0]} castShadow>
+        <boxGeometry args={[BAR, h, fd]} />
+        <meshStandardMaterial {...FRAME} />
+      </mesh>
+      {/* two glass panels, slightly overlapping and offset in depth */}
+      {[
+        [-panelW / 2 + 0.02, -0.015],
+        [panelW / 2 - 0.02, 0.015],
+      ].map(([x, z], i) => (
+        <group key={i}>
+          <mesh position={[x, h / 2, z]}>
+            <boxGeometry args={[panelW, h - 0.04, 0.02]} />
+            <meshStandardMaterial color="#bcd6e6" transparent opacity={0.28} roughness={0.05} />
+          </mesh>
+          {/* panel frame edges */}
+          <mesh position={[x, h / 2, z]} castShadow>
+            <boxGeometry args={[panelW, 0.04, 0.03]} />
+            <meshStandardMaterial color="#9aa0a8" metalness={0.5} roughness={0.4} />
+          </mesh>
+        </group>
+      ))}
     </group>
   )
 }

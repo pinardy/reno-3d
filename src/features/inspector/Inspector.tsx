@@ -288,7 +288,7 @@ function OpeningInspector() {
     })
   return (
     <div>
-      <Section title={op.type === 'door' ? 'Door' : 'Window'}>
+      <Section title={op.type[0].toUpperCase() + op.type.slice(1) + ' opening'}>
         <Row label="Width">
           <NumberInput value={op.width} step={0.05} min={0.3} max={4} suffix="m" onEditStart={checkpoint} onChange={(v) => set({ width: v })} />
         </Row>
@@ -301,8 +301,15 @@ function OpeningInspector() {
         <Row label="Position">
           <NumberInput value={op.offset} step={0.05} min={0} max={20} suffix="m" onEditStart={checkpoint} onChange={(v) => set({ offset: v })} />
         </Row>
-        <div className="mt-2 flex gap-1">
-          {(['door', 'window'] as const).map((t) => (
+        <div className="mt-2 grid grid-cols-4 gap-1">
+          {(
+            [
+              ['door', 0, 2.05],
+              ['window', 0.9, 1.2],
+              ['cased', 0, 2.05],
+              ['sliding', 0, 2.1],
+            ] as const
+          ).map(([t, sill, height]) => (
             <button
               key={t}
               type="button"
@@ -311,17 +318,12 @@ function OpeningInspector() {
                   const o = p.openings.find((x) => x.id === id)
                   if (o) {
                     o.type = t
-                    if (t === 'door') {
-                      o.sillHeight = 0
-                      o.height = 2.05
-                    } else {
-                      o.sillHeight = 0.9
-                      o.height = 1.2
-                    }
+                    o.sillHeight = sill
+                    o.height = height
                   }
                 })
               }
-              className={`flex-1 rounded py-1 text-[11px] capitalize ${
+              className={`rounded py-1 text-[10px] capitalize ${
                 op.type === t ? 'bg-accent text-white' : 'bg-panel2 text-neutral-300 hover:bg-edge'
               }`}
             >
