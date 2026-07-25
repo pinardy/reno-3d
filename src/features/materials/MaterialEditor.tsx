@@ -1,6 +1,6 @@
 import type { Material } from '../../types/project'
 import { Row, ColorSwatch, Slider } from '../../app/ui'
-import { TEXTURE_IDS, type TextureId } from './textures'
+import { TEXTURE_IDS, type TextureId } from './textureIds'
 import { TEXTURE_LABELS, type Preset } from './presets'
 
 export function MaterialEditor({

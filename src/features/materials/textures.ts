@@ -1,31 +1,13 @@
 import * as THREE from 'three'
+import { type TextureId, TEXTURE_IDS } from './textureIds'
 
 // Procedurally generated canvas textures so the app needs no external image
 // assets. Each is cached by id. Textures tile (RepeatWrapping); callers set
 // repeat based on surface size.
 
+export { type TextureId, TEXTURE_IDS }
+
 const cache = new Map<string, THREE.Texture>()
-
-export type TextureId =
-  | 'none'
-  | 'wood'
-  | 'wood-dark'
-  | 'tile'
-  | 'marble'
-  | 'carpet'
-  | 'concrete'
-  | 'fabric'
-
-export const TEXTURE_IDS: TextureId[] = [
-  'none',
-  'wood',
-  'wood-dark',
-  'tile',
-  'marble',
-  'carpet',
-  'concrete',
-  'fabric',
-]
 
 function makeCanvas(size = 512) {
   const c = document.createElement('canvas')

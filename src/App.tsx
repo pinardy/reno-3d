@@ -1,12 +1,17 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Toolbar } from './app/Toolbar'
 import { LeftPanel } from './app/LeftPanel'
 import { RightPanel } from './app/RightPanel'
 import { TraceEditor } from './features/trace/TraceEditor'
-import { DesignView } from './features/scene/DesignView'
 import { useStore } from './store/store'
 import { usePersistence } from './features/persistence/autosave'
 import { useKeyboardShortcuts } from './app/useKeyboardShortcuts'
+
+// The 3D view pulls in three.js / R3F / drei — load it on demand so the initial
+// (2D tracing) bundle stays small.
+const DesignView = lazy(() =>
+  import('./features/scene/DesignView').then((m) => ({ default: m.DesignView })),
+)
 
 export default function App() {
   const editorMode = useStore((s) => s.editorMode)
@@ -24,7 +29,19 @@ export default function App() {
       <div className="flex min-h-0 flex-1">
         <LeftPanel />
         <main className="relative min-w-0 flex-1 bg-[#14161a]">
-          {editorMode === 'trace' ? <TraceEditor /> : <DesignView />}
+          {editorMode === 'trace' ? (
+            <TraceEditor />
+          ) : (
+            <Suspense
+              fallback={
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-400">
+                  Loading 3D view…
+                </div>
+              }
+            >
+              <DesignView />
+            </Suspense>
+          )}
         </main>
         <RightPanel />
       </div>

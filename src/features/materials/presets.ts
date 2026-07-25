@@ -1,5 +1,5 @@
 import type { Material } from '../../types/project'
-import type { TextureId } from './textures'
+import type { TextureId } from './textureIds'
 
 export interface Preset {
   name: string
