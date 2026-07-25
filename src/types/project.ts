@@ -65,6 +65,14 @@ export type ItemKind =
   | 'sink' // vanity / counter with basin
   | 'bathtub'
   | 'pendant' // hanging ceiling light
+  | 'piano' // upright piano
+  | 'vase' // decorative vase (optionally with flowers)
+  | 'plant' // potted plant
+  | 'picture' // framed wall art / mirror
+  | 'appliance' // boxy appliance (fridge/washer/microwave…)
+  | 'hood' // kitchen range hood
+  | 'shower' // glass shower stall
+  | 'toiletries' // small bottles cluster
   | 'glb' // external model
 
 export interface Item {

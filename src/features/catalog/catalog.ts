@@ -23,6 +23,7 @@ export interface CatalogEntry {
   size: { w: number; d: number; h: number } // metres, bounding footprint
   material: Material
   params?: Record<string, number | string | boolean>
+  baseY?: number // default vertical lift (wall art, range hoods, counter items)
 }
 
 export const CATALOG: CatalogEntry[] = [
@@ -78,12 +79,11 @@ export const CATALOG: CatalogEntry[] = [
   },
   {
     id: 'plant',
-    kind: 'lamp',
+    kind: 'plant',
     name: 'Potted Plant',
     category: 'Decor',
     size: { w: 0.5, d: 0.5, h: 1.1 },
     material: makeMaterial({ color: '#3f7d4f', roughness: 0.9 }),
-    params: { plant: true },
   },
   {
     id: 'bed-queen',
@@ -320,6 +320,230 @@ export const CATALOG: CatalogEntry[] = [
     size: { w: 0.35, d: 0.35, h: 0.4 },
     material: makeMaterial({ color: '#2b2b2f', roughness: 0.5, metalness: 0.3 }),
   },
+
+  // ===== Living (more) =====
+  {
+    id: 'loveseat',
+    kind: 'sofa',
+    name: 'Loveseat',
+    category: 'Living',
+    size: { w: 1.5, d: 0.9, h: 0.8 },
+    material: makeMaterial({ color: '#7a8a7c', roughness: 0.9, texture: 'fabric' }),
+    params: { seats: 2 },
+  },
+  {
+    id: 'sectional-sofa',
+    kind: 'sofa',
+    name: 'L-Sectional Sofa',
+    category: 'Living',
+    size: { w: 2.5, d: 1.6, h: 0.8 },
+    material: makeMaterial({ color: '#59606b', roughness: 0.9, texture: 'fabric' }),
+    params: { chaise: true },
+  },
+  {
+    id: 'piano',
+    kind: 'piano',
+    name: 'Upright Piano',
+    category: 'Living',
+    size: { w: 1.5, d: 0.62, h: 1.2 },
+    material: makeMaterial({ color: '#17181b', roughness: 0.25, metalness: 0.1 }),
+  },
+  {
+    id: 'floor-vase',
+    kind: 'vase',
+    name: 'Floor Vase',
+    category: 'Living',
+    size: { w: 0.32, d: 0.32, h: 0.7 },
+    material: makeMaterial({ color: '#b7724a', roughness: 0.4 }),
+  },
+  {
+    id: 'wall-art-l',
+    kind: 'picture',
+    name: 'Wall Art (large)',
+    category: 'Living',
+    size: { w: 1.2, d: 0.05, h: 0.8 },
+    material: makeMaterial({ color: '#6d84a8', roughness: 0.7 }),
+    baseY: 1.15,
+  },
+  {
+    id: 'wall-art-set',
+    kind: 'picture',
+    name: 'Framed Print',
+    category: 'Living',
+    size: { w: 0.55, d: 0.05, h: 0.75 },
+    material: makeMaterial({ color: '#c58a5a', roughness: 0.7 }),
+    baseY: 1.3,
+  },
+  {
+    id: 'table-lamp',
+    kind: 'lamp',
+    name: 'Table Lamp',
+    category: 'Living',
+    size: { w: 0.3, d: 0.3, h: 0.5 },
+    material: makeMaterial({ color: '#e6ddc9', roughness: 0.6 }),
+    baseY: 0.4,
+  },
+
+  // ===== Bedroom (more) =====
+  {
+    id: 'bed-king',
+    kind: 'bed',
+    name: 'King Bed',
+    category: 'Bedroom',
+    size: { w: 1.9, d: 2.1, h: 1.0 },
+    material: makeMaterial({ color: '#b9c3cb', roughness: 0.95, texture: 'fabric' }),
+  },
+  {
+    id: 'bed-double',
+    kind: 'bed',
+    name: 'Double Bed',
+    category: 'Bedroom',
+    size: { w: 1.4, d: 2.0, h: 1.0 },
+    material: makeMaterial({ color: '#cbb8a6', roughness: 0.95, texture: 'fabric' }),
+  },
+  {
+    id: 'bed-kids',
+    kind: 'bed',
+    name: 'Kids Bed',
+    category: 'Bedroom',
+    size: { w: 0.95, d: 1.7, h: 0.85 },
+    material: makeMaterial({ color: '#8fb7d6', roughness: 0.95, texture: 'fabric' }),
+  },
+  {
+    id: 'bedroom-plant',
+    kind: 'plant',
+    name: 'Tall Plant',
+    category: 'Bedroom',
+    size: { w: 0.6, d: 0.6, h: 1.6 },
+    material: makeMaterial({ color: '#3f7d4f', roughness: 0.9 }),
+    params: { tall: true },
+  },
+
+  // ===== Kitchen appliances =====
+  {
+    id: 'microwave',
+    kind: 'appliance',
+    name: 'Microwave',
+    category: 'Kitchen',
+    size: { w: 0.5, d: 0.36, h: 0.3 },
+    material: makeMaterial({ color: '#2c2f34', roughness: 0.4, metalness: 0.3 }),
+    baseY: 0.9,
+  },
+  {
+    id: 'dishwasher',
+    kind: 'appliance',
+    name: 'Dishwasher',
+    category: 'Kitchen',
+    size: { w: 0.6, d: 0.6, h: 0.85 },
+    material: makeMaterial({ color: '#c9ccd0', roughness: 0.3, metalness: 0.5 }),
+  },
+  {
+    id: 'washer',
+    kind: 'appliance',
+    name: 'Washing Machine',
+    category: 'Kitchen',
+    size: { w: 0.6, d: 0.6, h: 0.85 },
+    material: makeMaterial({ color: '#e7e9ec', roughness: 0.35, metalness: 0.3 }),
+    params: { roundDoor: true },
+  },
+  {
+    id: 'range-hood',
+    kind: 'hood',
+    name: 'Range Hood',
+    category: 'Kitchen',
+    size: { w: 0.9, d: 0.5, h: 0.6 },
+    material: makeMaterial({ color: '#c8ccd0', roughness: 0.3, metalness: 0.6 }),
+    baseY: 1.5,
+  },
+  {
+    id: 'coffee-machine',
+    kind: 'appliance',
+    name: 'Coffee Machine',
+    category: 'Kitchen',
+    size: { w: 0.3, d: 0.4, h: 0.4 },
+    material: makeMaterial({ color: '#3a3d42', roughness: 0.4, metalness: 0.3 }),
+    baseY: 0.9,
+  },
+  {
+    id: 'kettle',
+    kind: 'appliance',
+    name: 'Kettle',
+    category: 'Kitchen',
+    size: { w: 0.22, d: 0.22, h: 0.26 },
+    material: makeMaterial({ color: '#d5d7da', roughness: 0.3, metalness: 0.5 }),
+    baseY: 0.9,
+  },
+
+  // ===== Bathroom (more) =====
+  {
+    id: 'shower',
+    kind: 'shower',
+    name: 'Shower Stall',
+    category: 'Bathroom',
+    size: { w: 0.9, d: 0.9, h: 2.0 },
+    material: makeMaterial({ color: '#dfe6ea', roughness: 0.1, metalness: 0.1 }),
+  },
+  {
+    id: 'mirror',
+    kind: 'picture',
+    name: 'Mirror',
+    category: 'Bathroom',
+    size: { w: 0.7, d: 0.04, h: 1.0 },
+    material: makeMaterial({ color: '#dfe7ee', roughness: 0.05, metalness: 0.9 }),
+    baseY: 1.0,
+    params: { mirror: true },
+  },
+  {
+    id: 'toiletries',
+    kind: 'toiletries',
+    name: 'Toiletries',
+    category: 'Bathroom',
+    size: { w: 0.3, d: 0.16, h: 0.22 },
+    material: makeMaterial({ color: '#8fbfc8', roughness: 0.5 }),
+    baseY: 0.9,
+  },
+  {
+    id: 'towel-plant',
+    kind: 'plant',
+    name: 'Small Plant',
+    category: 'Bathroom',
+    size: { w: 0.3, d: 0.3, h: 0.5 },
+    material: makeMaterial({ color: '#4f9d5f', roughness: 0.9 }),
+    baseY: 0.9,
+  },
+
+  // ===== Office (more) =====
+  {
+    id: 'filing-cabinet',
+    kind: 'cabinet',
+    name: 'Filing Cabinet',
+    category: 'Office',
+    size: { w: 0.5, d: 0.6, h: 0.7 },
+    material: makeMaterial({ color: '#4a4d52', roughness: 0.4, metalness: 0.3 }),
+    params: { width: 0.5, depth: 0.6, height: 0.7, doors: 1, counter: false },
+  },
+
+  // ===== Decor (more) =====
+  {
+    id: 'table-vase',
+    kind: 'vase',
+    name: 'Vase with Flowers',
+    category: 'Decor',
+    size: { w: 0.2, d: 0.2, h: 0.3 },
+    material: makeMaterial({ color: '#d8d2c4', roughness: 0.3 }),
+    params: { flowers: true },
+    baseY: 0.75,
+  },
+  {
+    id: 'wall-mirror',
+    kind: 'picture',
+    name: 'Round Mirror',
+    category: 'Decor',
+    size: { w: 0.7, d: 0.05, h: 0.7 },
+    material: makeMaterial({ color: '#dfe7ee', roughness: 0.05, metalness: 0.9 }),
+    baseY: 1.2,
+    params: { mirror: true, round: true },
+  },
 ]
 
 export const CATEGORIES: Category[] = [
@@ -340,7 +564,8 @@ export function catalogById(id: string): CatalogEntry | undefined {
 export function newItemFromCatalog(entry: CatalogEntry, pos: Vec2): Omit<Item, 'id'> {
   // wall cabinets float above the counter; pendants hang near the ceiling
   let y = 0
-  if (entry.id === 'wall-cabinet') y = 1.4
+  if (typeof entry.baseY === 'number') y = entry.baseY
+  else if (entry.id === 'wall-cabinet') y = 1.4
   else if (entry.kind === 'pendant') y = 2.3
   return {
     catalogId: entry.id,

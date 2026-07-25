@@ -1,7 +1,25 @@
 import { useState } from 'react'
-import { Sofa, Package, Upload } from 'lucide-react'
+import {
+  Sofa,
+  Package,
+  Upload,
+  BedDouble,
+  Lamp,
+  Tv,
+  Image,
+  Bath,
+  Armchair,
+  Music,
+  Flower2,
+  Sprout,
+  ShowerHead,
+  WashingMachine,
+  Table,
+  SprayCan,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useStore, storeApi } from '../../store/store'
-import { makeMaterial } from '../../types/project'
+import { makeMaterial, type ItemKind } from '../../types/project'
 import { Section } from '../../app/ui'
 import {
   CATALOG,
@@ -11,6 +29,24 @@ import {
   type CatalogEntry,
 } from './catalog'
 import { polygonCentroid } from '../../geometry/vec'
+
+const KIND_ICON: Partial<Record<ItemKind, LucideIcon>> = {
+  sofa: Sofa,
+  bed: BedDouble,
+  chair: Armchair,
+  table: Table,
+  lamp: Lamp,
+  pendant: Lamp,
+  tv: Tv,
+  piano: Music,
+  vase: Flower2,
+  plant: Sprout,
+  picture: Image,
+  bathtub: Bath,
+  shower: ShowerHead,
+  appliance: WashingMachine,
+  toiletries: SprayCan,
+}
 
 export function CatalogPanel() {
   const [cat, setCat] = useState<Category>('Living')
@@ -87,11 +123,10 @@ export function CatalogPanel() {
                 className="flex h-9 w-9 items-center justify-center rounded"
                 style={{ background: entry.material.color + '33' }}
               >
-                {entry.kind === 'sofa' ? (
-                  <Sofa size={18} className="text-neutral-200" />
-                ) : (
-                  <Package size={18} className="text-neutral-200" />
-                )}
+                {(() => {
+                  const Icon = KIND_ICON[entry.kind] ?? Package
+                  return <Icon size={18} className="text-neutral-200" />
+                })()}
               </span>
               <span className="text-[11px] leading-tight text-neutral-300">
                 {entry.name}

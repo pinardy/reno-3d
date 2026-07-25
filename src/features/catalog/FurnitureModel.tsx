@@ -21,7 +21,15 @@ export function FurnitureModel({ item }: { item: Item }) {
 
   switch (item.kind) {
     case 'sofa':
-      return <Sofa w={size.w} d={size.d} h={size.h} m={m} />
+      return (
+        <Sofa
+          w={size.w}
+          d={size.d}
+          h={size.h}
+          chaise={bool(item.params?.chaise, false)}
+          m={m}
+        />
+      )
     case 'bed':
       return <Bed w={size.w} d={size.d} m={m} />
     case 'table':
@@ -72,11 +80,39 @@ export function FurnitureModel({ item }: { item: Item }) {
         </mesh>
       )
     case 'lamp':
-      return bool(item.params?.plant, false) ? (
-        <Plant h={size.h} m={m} />
-      ) : (
-        <Lamp h={size.h} m={m} />
+      return <Lamp h={size.h} m={m} />
+    case 'piano':
+      return <Piano w={size.w} d={size.d} h={size.h} m={m} />
+    case 'vase':
+      return <Vase w={size.w} h={size.h} flowers={bool(item.params?.flowers, false)} m={m} />
+    case 'plant':
+      return <Plant h={size.h} tall={bool(item.params?.tall, false)} m={m} />
+    case 'picture':
+      return (
+        <Picture
+          w={size.w}
+          h={size.h}
+          round={bool(item.params?.round, false)}
+          mirror={bool(item.params?.mirror, false)}
+          m={m}
+        />
       )
+    case 'appliance':
+      return (
+        <Appliance
+          w={size.w}
+          d={size.d}
+          h={size.h}
+          roundDoor={bool(item.params?.roundDoor, false)}
+          m={m}
+        />
+      )
+    case 'hood':
+      return <Hood w={size.w} d={size.d} h={size.h} m={m} />
+    case 'shower':
+      return <Shower w={size.w} d={size.d} h={size.h} m={m} />
+    case 'toiletries':
+      return <Toiletries m={m} />
     case 'glb':
       return item.modelUrl ? (
         <Suspense fallback={null}>
@@ -93,14 +129,27 @@ export function FurnitureModel({ item }: { item: Item }) {
   }
 }
 
-function Sofa({ w, d, h, m }: { w: number; d: number; h: number; m: Material }) {
+function Sofa({
+  w,
+  d,
+  h,
+  chaise = false,
+  m,
+}: {
+  w: number
+  d: number
+  h: number
+  chaise?: boolean
+  m: Material
+}) {
   const seatH = h * 0.45
   const armW = 0.16
+  const bodyD = chaise ? d * 0.62 : d
   return (
     <group>
       {/* seat base */}
-      <mesh position={[0, seatH / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[w, seatH, d]} />
+      <mesh position={[0, seatH / 2, -(d - bodyD) / 2]} castShadow receiveShadow>
+        <boxGeometry args={[w, seatH, bodyD]} />
         <Mat material={m} repeat={[2, 1]} />
       </mesh>
       {/* backrest */}
@@ -110,16 +159,27 @@ function Sofa({ w, d, h, m }: { w: number; d: number; h: number; m: Material }) 
       </mesh>
       {/* arms */}
       {[-1, 1].map((s) => (
-        <mesh key={s} position={[(s * (w - armW)) / 2, h * 0.35, 0.02]} castShadow>
-          <boxGeometry args={[armW, h * 0.65, d - 0.1]} />
+        <mesh
+          key={s}
+          position={[(s * (w - armW)) / 2, h * 0.35, -(d - bodyD) / 2 + 0.02]}
+          castShadow
+        >
+          <boxGeometry args={[armW, h * 0.65, bodyD - 0.1]} />
           <Mat material={m} />
         </mesh>
       ))}
       {/* seat cushions */}
-      <mesh position={[0, seatH + 0.06, 0.05]} castShadow>
-        <boxGeometry args={[w - armW * 2 - 0.04, 0.12, d - 0.24]} />
+      <mesh position={[0, seatH + 0.06, -(d - bodyD) / 2 + 0.05]} castShadow>
+        <boxGeometry args={[w - armW * 2 - 0.04, 0.12, bodyD - 0.24]} />
         <Mat material={m} />
       </mesh>
+      {/* chaise extension (L-shape) on the right, extending forward */}
+      {chaise && (
+        <mesh position={[(w - w * 0.42) / 2, seatH / 2, (bodyD) / 2]} castShadow receiveShadow>
+          <boxGeometry args={[w * 0.42, seatH, d - bodyD]} />
+          <Mat material={m} repeat={[1, 1]} />
+        </mesh>
+      )}
     </group>
   )
 }
@@ -303,23 +363,310 @@ function Lamp({ h, m }: { h: number; m: Material }) {
   )
 }
 
-function Plant({ h, m }: { h: number; m: Material }) {
+function Plant({ h, tall = false, m }: { h: number; tall?: boolean; m: Material }) {
+  const potH = Math.min(0.35, h * 0.3)
   return (
     <group>
-      <mesh position={[0, 0.15, 0]} castShadow>
-        <cylinderGeometry args={[0.16, 0.12, 0.3, 16]} />
+      {/* pot */}
+      <mesh position={[0, potH / 2, 0]} castShadow>
+        <cylinderGeometry args={[0.16, 0.12, potH, 16]} />
         <meshStandardMaterial color="#b5651d" roughness={0.8} />
       </mesh>
-      <mesh position={[0, h - 0.35, 0]} castShadow>
-        <sphereGeometry args={[Math.min(0.35, h * 0.35), 12, 10]} />
+      {tall ? (
+        <group>
+          {/* slender trunk + leafy crown */}
+          <mesh position={[0, h * 0.55, 0]} castShadow>
+            <cylinderGeometry args={[0.03, 0.04, h * 0.6, 8]} />
+            <meshStandardMaterial color="#6b4a2f" roughness={0.8} />
+          </mesh>
+          {[0, 1, 2, 3, 4].map((i) => {
+            const a = (i / 5) * Math.PI * 2
+            return (
+              <mesh
+                key={i}
+                position={[Math.cos(a) * 0.18, h - 0.2, Math.sin(a) * 0.18]}
+                rotation={[0.5, a, 0]}
+                castShadow
+              >
+                <coneGeometry args={[0.09, 0.5, 6]} />
+                <Mat material={m} />
+              </mesh>
+            )
+          })}
+        </group>
+      ) : (
+        <group>
+          <mesh position={[0, potH + (h - potH) * 0.55, 0]} castShadow>
+            <sphereGeometry args={[Math.min(0.35, h * 0.34), 12, 10]} />
+            <Mat material={m} />
+          </mesh>
+          <mesh position={[0.1, potH + (h - potH) * 0.75, 0.05]} castShadow>
+            <sphereGeometry args={[Math.min(0.22, h * 0.22), 10, 8]} />
+            <Mat material={m} />
+          </mesh>
+        </group>
+      )}
+    </group>
+  )
+}
+
+function Piano({ w, d, h, m }: { w: number; d: number; h: number; m: Material }) {
+  const kbH = h * 0.52
+  return (
+    <group>
+      {/* body */}
+      <mesh position={[0, h / 2, -d * 0.15]} castShadow receiveShadow>
+        <boxGeometry args={[w, h, d * 0.7]} />
         <Mat material={m} />
       </mesh>
-      <mesh position={[0.1, h - 0.15, 0.05]} castShadow>
-        <sphereGeometry args={[0.22, 10, 8]} />
+      {/* keyboard shelf */}
+      <mesh position={[0, kbH, d * 0.25]} castShadow>
+        <boxGeometry args={[w * 0.94, 0.1, d * 0.4]} />
+        <Mat material={m} />
+      </mesh>
+      {/* white keys */}
+      <mesh position={[0, kbH + 0.06, d * 0.33]} castShadow>
+        <boxGeometry args={[w * 0.9, 0.03, 0.16]} />
+        <meshStandardMaterial color="#f7f6f2" roughness={0.4} />
+      </mesh>
+      {/* black keys hint */}
+      <mesh position={[0, kbH + 0.08, d * 0.29]}>
+        <boxGeometry args={[w * 0.9, 0.03, 0.08]} />
+        <meshStandardMaterial color="#1a1a1c" roughness={0.5} />
+      </mesh>
+      {/* lid line */}
+      <mesh position={[0, h * 0.82, d * 0.1]}>
+        <boxGeometry args={[w, 0.02, d * 0.05]} />
+        <meshStandardMaterial color="#000" roughness={0.4} />
+      </mesh>
+      {/* feet */}
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[(s * w) / 2.4, 0.06, 0]} castShadow>
+          <boxGeometry args={[0.1, 0.12, d * 0.6]} />
+          <Mat material={m} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function Vase({ w, h, flowers = false, m }: { w: number; h: number; flowers?: boolean; m: Material }) {
+  const r = w / 2
+  return (
+    <group>
+      {/* body: bulged bottom + narrow neck */}
+      <mesh position={[0, h * 0.35, 0]} castShadow>
+        <sphereGeometry args={[r, 16, 12]} />
+        <Mat material={m} />
+      </mesh>
+      <mesh position={[0, h * 0.72, 0]} castShadow>
+        <cylinderGeometry args={[r * 0.55, r * 0.7, h * 0.5, 16]} />
+        <Mat material={m} />
+      </mesh>
+      {flowers && (
+        <group position={[0, h, 0]}>
+          {[0, 1, 2, 3, 4].map((i) => {
+            const a = (i / 5) * Math.PI * 2
+            return (
+              <group key={i}>
+                <mesh
+                  position={[Math.cos(a) * 0.06, 0.12, Math.sin(a) * 0.06]}
+                  rotation={[0, 0, Math.cos(a) * 0.4]}
+                >
+                  <cylinderGeometry args={[0.006, 0.006, 0.28, 5]} />
+                  <meshStandardMaterial color="#3f7d4f" roughness={0.8} />
+                </mesh>
+                <mesh position={[Math.cos(a) * 0.12, 0.26, Math.sin(a) * 0.12]} castShadow>
+                  <sphereGeometry args={[0.05, 8, 6]} />
+                  <meshStandardMaterial
+                    color={['#e57373', '#f6bd60', '#d98cb3', '#f7ede2', '#b5838d'][i]}
+                    roughness={0.7}
+                  />
+                </mesh>
+              </group>
+            )
+          })}
+        </group>
+      )}
+    </group>
+  )
+}
+
+function Picture({
+  w,
+  h,
+  round = false,
+  mirror = false,
+  m,
+}: {
+  w: number
+  h: number
+  round?: boolean
+  mirror?: boolean
+  m: Material
+}) {
+  const frameMat: Material = mirror
+    ? { color: '#c9ccd2', roughness: 0.3, metalness: 0.6 }
+    : { color: '#3a2e22', roughness: 0.5, metalness: 0 }
+  // built standing upright, facing +z, bottom at y=0
+  return (
+    <group position={[0, h / 2, 0]}>
+      {round ? (
+        <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[w / 2, w / 2, 0.04, 32]} />
+          <meshStandardMaterial {...matProps(frameMat)} />
+        </mesh>
+      ) : (
+        <mesh castShadow>
+          <boxGeometry args={[w, h, 0.04]} />
+          <meshStandardMaterial {...matProps(frameMat)} />
+        </mesh>
+      )}
+      {/* face (planeGeometry / circleGeometry face +z by default) */}
+      <mesh position={[0, 0, 0.025]}>
+        {round ? (
+          <circleGeometry args={[w / 2 - 0.03, 32]} />
+        ) : (
+          <planeGeometry args={[w - 0.06, h - 0.06]} />
+        )}
+        <meshStandardMaterial
+          color={m.color}
+          roughness={mirror ? 0.05 : 0.6}
+          metalness={mirror ? 0.95 : 0}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+function Appliance({
+  w,
+  d,
+  h,
+  roundDoor = false,
+  m,
+}: {
+  w: number
+  d: number
+  h: number
+  roundDoor?: boolean
+  m: Material
+}) {
+  return (
+    <group>
+      <mesh position={[0, h / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, h, d]} />
+        <Mat material={m} />
+      </mesh>
+      {/* front panel */}
+      <mesh position={[0, h / 2, d / 2 + 0.005]}>
+        <boxGeometry args={[w - 0.04, h - 0.06, 0.02]} />
+        <meshStandardMaterial color="#2c2f34" roughness={0.35} metalness={0.4} />
+      </mesh>
+      {roundDoor ? (
+        <mesh position={[0, h / 2, d / 2 + 0.02]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry
+            args={[Math.min(w, h) * 0.32, Math.min(w, h) * 0.32, 0.02, 24]}
+          />
+          <meshStandardMaterial color="#11141a" roughness={0.2} metalness={0.3} />
+        </mesh>
+      ) : (
+        <mesh position={[w / 2 - 0.06, h * 0.78, d / 2 + 0.03]} castShadow>
+          <boxGeometry args={[0.03, 0.14, 0.03]} />
+          <meshStandardMaterial color="#d5d7da" metalness={0.7} roughness={0.3} />
+        </mesh>
+      )}
+    </group>
+  )
+}
+
+function Hood({ w, d, h, m }: { w: number; d: number; h: number; m: Material }) {
+  return (
+    <group>
+      {/* canopy */}
+      <mesh position={[0, h * 0.2, 0]} castShadow>
+        <boxGeometry args={[w, h * 0.4, d]} />
+        <Mat material={m} />
+      </mesh>
+      {/* chimney */}
+      <mesh position={[0, h * 0.7, -d * 0.1]} castShadow>
+        <boxGeometry args={[w * 0.3, h * 0.6, d * 0.4]} />
         <Mat material={m} />
       </mesh>
     </group>
   )
+}
+
+function Shower({ w, d, h, m }: { w: number; d: number; h: number; m: Material }) {
+  const glass = (
+    <meshStandardMaterial
+      color="#cfe0e6"
+      transparent
+      opacity={0.22}
+      roughness={0.05}
+      metalness={0.1}
+    />
+  )
+  return (
+    <group>
+      {/* tray */}
+      <mesh position={[0, 0.04, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, 0.08, d]} />
+        <Mat material={m} />
+      </mesh>
+      {/* back + side wall (tiled) */}
+      <mesh position={[0, h / 2, -d / 2 + 0.02]}>
+        <boxGeometry args={[w, h, 0.04]} />
+        <SurfaceMaterial material={{ color: '#e6e8ea', roughness: 0.4, metalness: 0, texture: 'tile' }} repeat={[3, 6]} />
+      </mesh>
+      <mesh position={[-w / 2 + 0.02, h / 2, 0]}>
+        <boxGeometry args={[0.04, h, d]} />
+        <SurfaceMaterial material={{ color: '#e6e8ea', roughness: 0.4, metalness: 0, texture: 'tile' }} repeat={[3, 6]} />
+      </mesh>
+      {/* glass front + side */}
+      <mesh position={[0, h / 2, d / 2 - 0.02]}>
+        <boxGeometry args={[w, h, 0.02]} />
+        {glass}
+      </mesh>
+      <mesh position={[w / 2 - 0.02, h / 2, 0]}>
+        <boxGeometry args={[0.02, h, d]} />
+        {glass}
+      </mesh>
+      {/* shower head */}
+      <mesh position={[0, h - 0.15, -d / 2 + 0.12]} castShadow>
+        <cylinderGeometry args={[0.06, 0.06, 0.03, 16]} />
+        <meshStandardMaterial color="#c8ccd0" metalness={0.8} roughness={0.2} />
+      </mesh>
+    </group>
+  )
+}
+
+function Toiletries({ m }: { m: Material }) {
+  const bottles: { x: number; h: number; r: number; c: string }[] = [
+    { x: -0.09, h: 0.2, r: 0.03, c: '#8fbfc8' },
+    { x: -0.02, h: 0.16, r: 0.028, c: '#e8a0a0' },
+    { x: 0.05, h: 0.12, r: 0.025, c: '#f2e2b0' },
+    { x: 0.11, h: 0.09, r: 0.022, c: '#b8d8b0' },
+  ]
+  return (
+    <group>
+      {/* tray */}
+      <mesh position={[0, 0.015, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.3, 0.03, 0.14]} />
+        <Mat material={m} />
+      </mesh>
+      {bottles.map((b, i) => (
+        <mesh key={i} position={[b.x, 0.03 + b.h / 2, 0]} castShadow>
+          <cylinderGeometry args={[b.r, b.r, b.h, 12]} />
+          <meshStandardMaterial color={b.c} roughness={0.4} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function matProps(m: Material) {
+  return { color: m.color, roughness: m.roughness, metalness: m.metalness }
 }
 
 function Shelf({
