@@ -4,6 +4,7 @@ import { Section, Row, NumberInput, TextInput } from '../../app/ui'
 import { MaterialEditor } from '../materials/MaterialEditor'
 import { PAINT_PRESETS, FLOOR_PRESETS } from '../materials/presets'
 import { dist } from '../../geometry/vec'
+import { num, bool } from '../../lib/params'
 import type { Material } from '../../types/project'
 
 export function Inspector() {
@@ -560,5 +561,3 @@ function ItemInspector() {
   )
 }
 
-const num = (v: unknown, d: number) => (typeof v === 'number' ? v : d)
-const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d)

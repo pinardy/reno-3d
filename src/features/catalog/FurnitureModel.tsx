@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { useGLTF } from '@react-three/drei'
 import type { Item, Material } from '../../types/project'
 import { SurfaceMaterial } from '../materials/SurfaceMaterial'
+import { num, bool } from '../../lib/params'
 import { catalogById } from './catalog'
 
 // All models are authored with their base at y=0 and centred on x/z. The parent
@@ -10,9 +11,6 @@ import { catalogById } from './catalog'
 function Mat({ material, repeat }: { material: Material; repeat?: [number, number] }) {
   return <SurfaceMaterial material={material} repeat={repeat} />
 }
-
-const num = (v: unknown, d: number) => (typeof v === 'number' ? v : d)
-const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d)
 
 export function FurnitureModel({ item }: { item: Item }) {
   const entry = catalogById(item.catalogId)

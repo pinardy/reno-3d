@@ -1,5 +1,6 @@
 import type { Project, Vec2 } from '../../types/project'
 import { dist, polygonArea, polygonCentroid } from '../../geometry/vec'
+import { num } from '../../lib/params'
 import { catalogById } from '../catalog/catalog'
 import { roomBBoxSize } from '../trace/rooms'
 
@@ -80,12 +81,11 @@ export function renderFloorPlan(p: Project): string {
   for (const it of p.items) {
     const entry = catalogById(it.catalogId)
     if (!entry) continue
-    const pn = (v: unknown, dv: number) => (typeof v === 'number' ? v : dv)
     const isCab = entry.kind === 'cabinet'
-    const w = (isCab ? pn(it.params?.width, entry.size.w) : entry.size.w) * it.scale
-    const d = (isCab ? pn(it.params?.depth, entry.size.d) : entry.size.d) * it.scale
+    const w = (isCab ? num(it.params?.width, entry.size.w) : entry.size.w) * it.scale
+    const d = (isCab ? num(it.params?.depth, entry.size.d) : entry.size.d) * it.scale
     const isCorner = isCab && it.params?.corner === true
-    const legLen = pn(it.params?.legLen, 1.0) * it.scale
+    const legLen = num(it.params?.legLen, 1.0) * it.scale
     const cx = X(it.position.x)
     const cy = Y(it.position.z)
     ctx.save()

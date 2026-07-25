@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { nanoid } from 'nanoid'
 import { useStore, storeApi } from '../../store/store'
 import {
   type Vec2,
@@ -669,7 +670,7 @@ export function TraceEditor() {
         st.commit((p) => {
           for (let i = 0; i < chain.length - 1; i++) {
             p.walls.push({
-              id: crypto.randomUUID(),
+              id: nanoid(),
               a: { ...chain[i] },
               b: { ...chain[i + 1] },
               height: p.wallHeight,
@@ -679,7 +680,7 @@ export function TraceEditor() {
           }
           if (closed && chain.length >= 3) {
             p.walls.push({
-              id: crypto.randomUUID(),
+              id: nanoid(),
               a: { ...chain[chain.length - 1] },
               b: { ...chain[0] },
               height: p.wallHeight,
