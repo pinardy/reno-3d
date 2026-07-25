@@ -34,6 +34,43 @@ export function useKeyboardShortcuts() {
         return
       }
 
+      // arrow-key nudge for selected furniture (design view, orbit mode)
+      if (
+        !meta &&
+        s.editorMode === 'design' &&
+        s.cameraMode === 'orbit' &&
+        e.key.startsWith('Arrow')
+      ) {
+        const ids = s.selectedItemIds.length
+          ? s.selectedItemIds
+          : s.selection.type === 'item' && s.selection.id
+            ? [s.selection.id]
+            : []
+        if (ids.length) {
+          const step = e.shiftKey ? 0.02 : 0.1
+          const d: Record<string, [number, number]> = {
+            ArrowUp: [0, -step],
+            ArrowDown: [0, step],
+            ArrowLeft: [-step, 0],
+            ArrowRight: [step, 0],
+          }
+          const mv = d[e.key]
+          if (mv) {
+            e.preventDefault()
+            s.commit((p) => {
+              for (const id of ids) {
+                const it = p.items.find((i) => i.id === id)
+                if (it) {
+                  it.position.x += mv[0]
+                  it.position.z += mv[1]
+                }
+              }
+            })
+            return
+          }
+        }
+      }
+
       // delete selection
       if ((e.key === 'Delete' || e.key === 'Backspace') && s.selection.id) {
         e.preventDefault()

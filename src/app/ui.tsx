@@ -34,6 +34,7 @@ export function Row({ label, children }: { label: string; children: ReactNode })
 export function NumberInput({
   value,
   onChange,
+  onEditStart,
   step = 0.1,
   min,
   max,
@@ -41,6 +42,7 @@ export function NumberInput({
 }: {
   value: number
   onChange: (v: number) => void
+  onEditStart?: () => void // called once when editing begins (for an undo checkpoint)
   step?: number
   min?: number
   max?: number
@@ -54,6 +56,7 @@ export function NumberInput({
         step={step}
         min={min}
         max={max}
+        onFocus={onEditStart}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-20 rounded border border-edge bg-panel2 px-2 py-1 text-right text-xs text-neutral-100 outline-none focus:border-accent"
       />
@@ -65,12 +68,14 @@ export function NumberInput({
 export function Slider({
   value,
   onChange,
+  onEditStart,
   min = 0,
   max = 1,
   step = 0.01,
 }: {
   value: number
   onChange: (v: number) => void
+  onEditStart?: () => void
   min?: number
   max?: number
   step?: number
@@ -82,6 +87,7 @@ export function Slider({
       min={min}
       max={max}
       step={step}
+      onPointerDown={onEditStart}
       onChange={(e) => onChange(parseFloat(e.target.value))}
       className="w-28"
     />

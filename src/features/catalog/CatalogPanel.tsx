@@ -50,7 +50,11 @@ const KIND_ICON: Partial<Record<ItemKind, LucideIcon>> = {
 
 export function CatalogPanel() {
   const [cat, setCat] = useState<Category>('Living')
-  const items = CATALOG.filter((c) => c.category === cat)
+  const [q, setQ] = useState('')
+  const query = q.trim().toLowerCase()
+  const items = query
+    ? CATALOG.filter((c) => c.name.toLowerCase().includes(query))
+    : CATALOG.filter((c) => c.category === cat)
 
   function defaultPos() {
     const p = useStore.getState().project
@@ -88,6 +92,14 @@ export function CatalogPanel() {
   return (
     <div>
       <Section title="Furniture">
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search furniture…"
+          className="mb-2 w-full rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-neutral-100 outline-none focus:border-accent"
+        />
+        {!query && (
         <div className="mb-3 flex flex-wrap gap-1">
           {CATEGORIES.map((c) => (
             <button
@@ -104,6 +116,7 @@ export function CatalogPanel() {
             </button>
           ))}
         </div>
+        )}
 
         <div className="grid grid-cols-2 gap-2">
           {items.map((entry) => (

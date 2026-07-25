@@ -47,6 +47,24 @@ describe('multi-select', () => {
   })
 })
 
+describe('checkpoint', () => {
+  it('makes a subsequent update() undoable as one step', () => {
+    const it0 = useStore.getState().project.items[0]
+    const startX = it0.position.x
+    useStore.getState().checkpoint()
+    // simulate a continuous edit gesture (no history of its own)
+    useStore.getState().update((p) => {
+      p.items[0].position.x = startX + 1
+    })
+    useStore.getState().update((p) => {
+      p.items[0].position.x = startX + 2
+    })
+    expect(useStore.getState().project.items[0].position.x).toBe(startX + 2)
+    useStore.getState().undo()
+    expect(useStore.getState().project.items[0].position.x).toBe(startX)
+  })
+})
+
 describe('undo / redo', () => {
   it('reverts and reapplies a commit', () => {
     const n = useStore.getState().project.walls.length

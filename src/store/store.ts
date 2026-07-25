@@ -48,6 +48,7 @@ interface AppState {
   commit: (recipe: (p: Project) => void) => void // pushes undo
   update: (recipe: (p: Project) => void) => void // no history (transient, e.g. drag)
   pushPast: (prev: Project) => void // push a captured snapshot as an undo step
+  checkpoint: () => void // snapshot current state as one undo step (call before an update gesture)
   undo: () => void
   redo: () => void
   canUndo: () => boolean
@@ -138,6 +139,12 @@ export const useStore = create<AppState>((set, get) => ({
   pushPast: (prev) =>
     set((state) => ({
       past: [...state.past, prev].slice(-HISTORY_LIMIT),
+      future: [],
+    })),
+
+  checkpoint: () =>
+    set((state) => ({
+      past: [...state.past, state.project].slice(-HISTORY_LIMIT),
       future: [],
     })),
 

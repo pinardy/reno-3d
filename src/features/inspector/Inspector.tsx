@@ -122,6 +122,7 @@ function WallInspector() {
   const wall = useStore((s) => s.project.walls.find((w) => w.id === id))
   const commit = useStore((s) => s.commit)
   const update = useStore((s) => s.update)
+  const checkpoint = useStore((s) => s.checkpoint)
   if (!wall) return null
 
   const patchMat = (patch: Partial<Material>) =>
@@ -169,6 +170,7 @@ function WallInspector() {
             min={1}
             max={5}
             suffix="m"
+            onEditStart={checkpoint}
             onChange={(v) =>
               update((p) => {
                 const w = p.walls.find((x) => x.id === id)
@@ -184,6 +186,7 @@ function WallInspector() {
             min={0.02}
             max={0.5}
             suffix="m"
+            onEditStart={checkpoint}
             onChange={(v) =>
               update((p) => {
                 const w = p.walls.find((x) => x.id === id)
@@ -275,6 +278,7 @@ function OpeningInspector() {
   const op = useStore((s) => s.project.openings.find((o) => o.id === id))
   const update = useStore((s) => s.update)
   const commit = useStore((s) => s.commit)
+  const checkpoint = useStore((s) => s.checkpoint)
   if (!op) return null
   const set = (patch: Partial<typeof op>) =>
     update((p) => {
@@ -285,16 +289,16 @@ function OpeningInspector() {
     <div>
       <Section title={op.type === 'door' ? 'Door' : 'Window'}>
         <Row label="Width">
-          <NumberInput value={op.width} step={0.05} min={0.3} max={4} suffix="m" onChange={(v) => set({ width: v })} />
+          <NumberInput value={op.width} step={0.05} min={0.3} max={4} suffix="m" onEditStart={checkpoint} onChange={(v) => set({ width: v })} />
         </Row>
         <Row label="Height">
-          <NumberInput value={op.height} step={0.05} min={0.3} max={3} suffix="m" onChange={(v) => set({ height: v })} />
+          <NumberInput value={op.height} step={0.05} min={0.3} max={3} suffix="m" onEditStart={checkpoint} onChange={(v) => set({ height: v })} />
         </Row>
         <Row label="Sill height">
-          <NumberInput value={op.sillHeight} step={0.05} min={0} max={2} suffix="m" onChange={(v) => set({ sillHeight: v })} />
+          <NumberInput value={op.sillHeight} step={0.05} min={0} max={2} suffix="m" onEditStart={checkpoint} onChange={(v) => set({ sillHeight: v })} />
         </Row>
         <Row label="Position">
-          <NumberInput value={op.offset} step={0.05} min={0} max={20} suffix="m" onChange={(v) => set({ offset: v })} />
+          <NumberInput value={op.offset} step={0.05} min={0} max={20} suffix="m" onEditStart={checkpoint} onChange={(v) => set({ offset: v })} />
         </Row>
         <div className="mt-2 flex gap-1">
           {(['door', 'window'] as const).map((t) => (
@@ -361,6 +365,7 @@ function ItemInspector() {
   const item = useStore((s) => s.project.items.find((i) => i.id === id))
   const update = useStore((s) => s.update)
   const commit = useStore((s) => s.commit)
+  const checkpoint = useStore((s) => s.checkpoint)
   if (!item) return null
 
   const patchMat = (patch: Partial<Material>) =>
@@ -391,11 +396,40 @@ function ItemInspector() {
           }
         />
         <div className="mt-2">
+          <Row label="Position X">
+            <NumberInput
+              value={item.position.x}
+              step={0.1}
+              suffix="m"
+              onEditStart={checkpoint}
+              onChange={(v) =>
+                update((p) => {
+                  const it = p.items.find((x) => x.id === id)
+                  if (it) it.position.x = v
+                })
+              }
+            />
+          </Row>
+          <Row label="Position Z">
+            <NumberInput
+              value={item.position.z}
+              step={0.1}
+              suffix="m"
+              onEditStart={checkpoint}
+              onChange={(v) =>
+                update((p) => {
+                  const it = p.items.find((x) => x.id === id)
+                  if (it) it.position.z = v
+                })
+              }
+            />
+          </Row>
           <Row label="Rotation">
             <NumberInput
               value={(item.rotationY * 180) / Math.PI}
               step={15}
               suffix="°"
+              onEditStart={checkpoint}
               onChange={(v) =>
                 update((p) => {
                   const it = p.items.find((x) => x.id === id)
@@ -411,6 +445,7 @@ function ItemInspector() {
               min={0.2}
               max={5}
               suffix="×"
+              onEditStart={checkpoint}
               onChange={(v) =>
                 update((p) => {
                   const it = p.items.find((x) => x.id === id)
@@ -426,6 +461,7 @@ function ItemInspector() {
               min={0}
               max={3}
               suffix="m"
+              onEditStart={checkpoint}
               onChange={(v) =>
                 update((p) => {
                   const it = p.items.find((x) => x.id === id)

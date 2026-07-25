@@ -33,10 +33,11 @@ Other scripts: `npm run build` (production build), `npm run preview`.
    Room tool (`R`).
 6. **Design 3D** — switch modes (top bar). Walls extrude, room floors fill in.
    **Orbit** to look around or **Walk** (click to lock the mouse, WASD / arrows).
-7. **Furnish** — drag furniture from the left catalog onto the floor; drag to move,
-   switch to **Rotate** to spin, hold **Shift** to snap to grid. **Shift-click** to
-   multi-select and move a group; **Cmd/Ctrl+D** duplicates. The catalog spans Living,
-   Bedroom, Kitchen, Dining, Bathroom, Office and Decor.
+7. **Furnish** — **search** the catalog or browse by category; drag furniture onto the
+   floor; drag to move, switch to **Rotate** to spin, hold **Shift** to snap to grid.
+   **Arrow keys** nudge the selection (Shift = fine); **Shift-click** to multi-select
+   and move a group; **Cmd/Ctrl+D** duplicates. Precise position/rotation/scale live in
+   the right panel.
 8. **Materials** — select any wall, floor or item and edit its colour / roughness /
    texture on the right. "Apply colour to all walls" repaints the whole home.
 9. **View, light & measure** (3D toolbar) — **Dimensions** overlays wall lengths and
