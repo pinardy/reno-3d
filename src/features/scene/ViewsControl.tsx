@@ -1,6 +1,12 @@
 import { Bookmark, BookmarkPlus, X } from 'lucide-react'
 import { useStore, storeApi } from '../../store/store'
 import { getCameraPose, applyCameraPose } from './cameraBridge'
+import type { SavedView } from '../../types/project'
+
+// A stable reference for projects that predate saved views: `?? []` would mint a
+// fresh array on every selector call, and zustand's useSyncExternalStore reads
+// that as an endlessly changing snapshot — an infinite re-render loop.
+const NO_VIEWS: SavedView[] = []
 
 /**
  * Park the current camera angle and jump back to it later — handy for showing the
@@ -8,7 +14,7 @@ import { getCameraPose, applyCameraPose } from './cameraBridge'
  * Views live in the project, so they export and share with it.
  */
 export function ViewsControl() {
-  const views = useStore((s) => s.project.views ?? [])
+  const views = useStore((s) => s.project.views ?? NO_VIEWS)
 
   function save() {
     const pose = getCameraPose()
