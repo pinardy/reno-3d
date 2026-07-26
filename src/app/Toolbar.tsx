@@ -45,6 +45,8 @@ export function Toolbar() {
   const project = useStore((s) => s.project)
   const loadProject = useStore((s) => s.loadProject)
   const saveState = useStore((s) => s.saveState)
+  // renaming no longer commits per keystroke, so take one undo step per edit
+  const checkpoint = useStore((s) => s.checkpoint)
   const small = useIsSmallScreen()
 
   // resizing down (or rotating) while walking would strand the camera in a mode
@@ -190,6 +192,7 @@ export function Toolbar() {
           <input
             value={name}
             onChange={(e) => renameProject(e.target.value)}
+            onFocus={checkpoint}
             className="w-48 rounded border border-transparent bg-transparent px-2 py-1 text-right text-sm text-neutral-200 outline-none hover:border-edge focus:border-accent"
           />
 
@@ -206,6 +209,7 @@ export function Toolbar() {
             <input
               value={name}
               onChange={(e) => renameProject(e.target.value)}
+              onFocus={checkpoint}
               aria-label="Project name"
               className="w-full rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-neutral-100 outline-none focus:border-accent"
             />

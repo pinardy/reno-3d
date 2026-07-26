@@ -126,10 +126,18 @@ export const useStore = create<AppState>((set, get) => ({
       tool: 'select',
       editorMode: 'trace',
     }),
+  // Renaming is one gesture, not one edit per character — committing per
+  // keystroke used to spend a 20-name's worth of the history limit and evict
+  // real work. The name field takes a checkpoint when it gains focus, so this
+  // only has to apply the change (still stamped, so the projects list reorders).
   renameProject: (name) =>
-    get().commit((p) => {
-      p.name = name
-    }),
+    set((state) => ({
+      project: withStamp(
+        produce(state.project, (p) => {
+          p.name = name
+        }),
+      ),
+    })),
 
   commit: (recipe) =>
     set((state) => {

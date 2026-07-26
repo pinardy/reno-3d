@@ -1,8 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useStore, storeApi } from '../store/store'
 import { isTypingTarget } from '../lib/dom'
 
 export function useKeyboardShortcuts() {
+  // true while a run of arrow-key nudges is in flight
+  const nudging = useRef(false)
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (isTypingTarget(e.target)) return
@@ -52,7 +55,14 @@ export function useKeyboardShortcuts() {
           const mv = d[e.key]
           if (mv) {
             e.preventDefault()
-            s.commit((p) => {
+            // one undo step per run of nudges: snapshot on the first keypress,
+            // then apply the rest without history. Holding an arrow key used to
+            // push a step per repeat and flush the undo stack.
+            if (!nudging.current) {
+              s.checkpoint()
+              nudging.current = true
+            }
+            s.update((p) => {
               for (const id of ids) {
                 const it = p.items.find((i) => i.id === id)
                 if (it) {
@@ -96,7 +106,16 @@ export function useKeyboardShortcuts() {
         }
       }
     }
+    // releasing the key ends the nudge run, so the next one starts a fresh step
+    function onKeyUp(e: KeyboardEvent) {
+      if (e.key.startsWith('Arrow')) nudging.current = false
+    }
+
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('keyup', onKeyUp)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keyup', onKeyUp)
+    }
   }, [])
 }

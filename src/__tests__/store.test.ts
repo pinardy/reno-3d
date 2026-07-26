@@ -65,6 +65,31 @@ describe('checkpoint', () => {
   })
 })
 
+describe('renaming a project', () => {
+  it('does not spend an undo step per keystroke', () => {
+    const steps = useStore.getState().past.length
+    for (const n of ['M', 'My', 'My ', 'My H', 'My Ho', 'My Home'])
+      useStore.getState().renameProject(n)
+    expect(useStore.getState().project.name).toBe('My Home')
+    expect(useStore.getState().past.length).toBe(steps)
+  })
+
+  it('is undoable as one step when the field checkpoints on focus', () => {
+    const original = useStore.getState().project.name
+    useStore.getState().checkpoint() // what onFocus does
+    for (const n of ['A', 'AB', 'ABC']) useStore.getState().renameProject(n)
+    expect(useStore.getState().project.name).toBe('ABC')
+    useStore.getState().undo()
+    expect(useStore.getState().project.name).toBe(original)
+  })
+
+  it('still stamps updatedAt so the projects list reorders', () => {
+    const before = useStore.getState().project.updatedAt
+    useStore.getState().renameProject('Renamed')
+    expect(useStore.getState().project.updatedAt).toBeGreaterThanOrEqual(before)
+  })
+})
+
 describe('undo / redo', () => {
   it('reverts and reapplies a commit', () => {
     const n = useStore.getState().project.walls.length

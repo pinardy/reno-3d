@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { Suspense, lazy, useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
 import { OrbitControls, Grid, ContactShadows } from '@react-three/drei'
@@ -16,7 +16,10 @@ import { WallsGroup, CornerPosts } from './Walls'
 import { RoomFloor } from './Floors'
 import { ItemsGroup } from './Items'
 import { WalkControls } from './controls'
-import { Effects } from './Effects'
+
+// postprocessing + n8ao are ~820KB of the 3D bundle, for a pass that phones
+// start with switched off. Load them only once HQ is actually asked for.
+const Effects = lazy(() => import('./Effects').then((m) => ({ default: m.Effects })))
 
 // Bridge so the HTML layer (drag-drop) can convert screen coords to a floor point.
 export type GroundPicker = (clientX: number, clientY: number) => Vec2 | null
@@ -204,7 +207,11 @@ export function SceneRoot({
         <WalkControls />
       )}
 
-      {hq && <Effects />}
+      {hq && (
+        <Suspense fallback={null}>
+          <Effects />
+        </Suspense>
+      )}
     </>
   )
 }
