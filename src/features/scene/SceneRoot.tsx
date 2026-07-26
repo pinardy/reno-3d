@@ -34,6 +34,7 @@ export function SceneRoot({
   timeOfDay,
   showCeilings,
   hq,
+  onContextLost,
 }: {
   pickerRef: React.MutableRefObject<GroundPicker | null>
   gizmoMode: 'move' | 'rotate'
@@ -43,6 +44,7 @@ export function SceneRoot({
   timeOfDay: number // 0..1, 0.5 = midday
   showCeilings: boolean
   hq: boolean
+  onContextLost: (lost: boolean) => void
 }) {
   const walls = useStore((s) => s.project.walls)
   const rooms = useStore((s) => s.project.rooms)
@@ -124,10 +126,18 @@ export function SceneRoot({
     const onLost = (e: Event) => {
       e.preventDefault()
       console.warn('WebGL context lost — awaiting restore')
+      onContextLost(true)
     }
+    // three's WebGLRenderer listens for this and rebuilds its resources; we just
+    // clear the notice so the user knows the view is live again.
+    const onRestored = () => onContextLost(false)
     canvas.addEventListener('webglcontextlost', onLost)
-    return () => canvas.removeEventListener('webglcontextlost', onLost)
-  }, [gl])
+    canvas.addEventListener('webglcontextrestored', onRestored)
+    return () => {
+      canvas.removeEventListener('webglcontextlost', onLost)
+      canvas.removeEventListener('webglcontextrestored', onRestored)
+    }
+  }, [gl, onContextLost])
 
   /**
    * The floor point the camera is looking at. In orbit mode that is the pivot

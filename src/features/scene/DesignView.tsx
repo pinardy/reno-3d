@@ -27,6 +27,9 @@ export function DesignView() {
   // the Canvas throws an uncaught async error and blanks the view, so show a
   // message instead.
   const [webglOk] = useState(isWebGLAvailable)
+  // The GPU can drop the context mid-session (driver reset, OS reclaiming it from
+  // a backgrounded tab); three restores it, but the canvas is frozen until then.
+  const [contextLost, setContextLost] = useState(false)
   const small = useIsSmallScreen()
   const cameraMode = useStore((s) => s.cameraMode)
   const hasContent = useStore(
@@ -91,8 +94,17 @@ export function DesignView() {
           timeOfDay={timeOfDay}
           showCeilings={showCeilings}
           hq={hq}
+          onContextLost={setContextLost}
         />
       </Canvas>
+
+      {contextLost && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#14161a]/60 backdrop-blur-sm">
+          <div className="rounded-lg bg-panel/90 px-4 py-2 text-sm text-neutral-200 shadow-lg">
+            Restoring 3D…
+          </div>
+        </div>
+      )}
 
       {/* top-left toolbar — wraps into rows once it runs out of width */}
       <div className="absolute left-2 right-2 top-2 flex flex-wrap items-start gap-1.5 sm:left-3 sm:right-auto sm:top-3 sm:items-center sm:gap-2">

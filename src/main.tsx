@@ -15,6 +15,12 @@ window.addEventListener('vite:preloadError', (e) => {
   window.location.reload()
 })
 
+// Once the app has run cleanly for a bit, this reload was a one-off deploy
+// transition, not a crash loop — release the guard so a *later* deploy in the
+// same long-lived tab can self-heal too. A build that's actually broken throws
+// again within this window, while the guard is still set, so it can't loop.
+window.setTimeout(() => sessionStorage.removeItem('reno:chunk-reloaded'), 10_000)
+
 // register the service worker for offline / installable PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
