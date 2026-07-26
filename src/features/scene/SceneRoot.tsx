@@ -13,6 +13,7 @@ import { DimensionLabels } from './DimensionLabels'
 import { OpeningsGroup } from './Openings'
 import { MeasureTool } from './MeasureTool'
 import { Lighting } from './Lighting'
+import { ItemLights } from './ItemLights'
 import { WallsGroup, CornerPosts } from './Walls'
 import { RoomFloor } from './Floors'
 import { ItemsGroup } from './Items'
@@ -180,6 +181,7 @@ export function SceneRoot({
   return (
     <>
       <Lighting timeOfDay={timeOfDay} />
+      <ItemLights items={items} timeOfDay={timeOfDay} />
       <ContactShadows
         position={[0, 0.002, 0]}
         scale={60}
