@@ -115,6 +115,20 @@ export function SceneRoot({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // A lost GPU context (driver reset, or the OS reclaiming it from a backgrounded
+  // tab on a low-memory device) is permanent unless we opt into restoration —
+  // otherwise the canvas just goes black. preventDefault lets the browser hand
+  // the context back, and three re-initialises its resources on restore.
+  useEffect(() => {
+    const canvas = gl.domElement
+    const onLost = (e: Event) => {
+      e.preventDefault()
+      console.warn('WebGL context lost — awaiting restore')
+    }
+    canvas.addEventListener('webglcontextlost', onLost)
+    return () => canvas.removeEventListener('webglcontextlost', onLost)
+  }, [gl])
+
   /**
    * The floor point the camera is looking at. In orbit mode that is the pivot
    * the camera turns around, which is what panning and zooming aim at. In walk

@@ -10,6 +10,7 @@ import { makeSampleProject } from '../sample/sample'
 import { TEMPLATES } from '../sample/templates'
 import { exportFloorPlanPNG } from '../persistence/floorplanExport'
 import { isSmallScreen, useIsSmallScreen } from '../../lib/device'
+import { isWebGLAvailable } from '../../lib/webgl'
 
 export function DesignView() {
   const pickerRef = useRef<GroundPicker | null>(null)
@@ -22,6 +23,10 @@ export function DesignView() {
   // start it off there — the toggle is still available if the device can take it
   const [hq, setHq] = useState(() => !isSmallScreen())
   const [timeOfDay, setTimeOfDay] = useState(0.5)
+  // Probe once on mount — if the browser won't grant a WebGL context, mounting
+  // the Canvas throws an uncaught async error and blanks the view, so show a
+  // message instead.
+  const [webglOk] = useState(isWebGLAvailable)
   const small = useIsSmallScreen()
   const cameraMode = useStore((s) => s.cameraMode)
   const hasContent = useStore(
@@ -38,6 +43,29 @@ export function DesignView() {
     const item = newItemFromCatalog(entry, pos)
     const newId = storeApi.addItem(item)
     useStore.getState().select({ type: 'item', id: newId })
+  }
+
+  if (!webglOk) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="mx-4 max-w-sm rounded-xl bg-panel/90 px-6 py-5 text-center backdrop-blur">
+          <p className="text-sm font-medium text-neutral-200">3D view unavailable</p>
+          <p className="mt-1 text-xs text-neutral-400">
+            This browser couldn't start WebGL, which the 3D view needs. Turn on
+            hardware acceleration in your browser settings, update your browser,
+            or try reopening this tab — then reload. You can still trace and edit
+            your plan in <span className="text-accent">Trace 2D</span>.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-3 rounded bg-accent/15 px-3 py-1.5 text-xs font-medium text-accent ring-1 ring-accent/30 hover:bg-accent/25"
+          >
+            Reload
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
