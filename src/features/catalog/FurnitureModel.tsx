@@ -28,6 +28,8 @@ import {
   Curtain,
   Shelter,
   Gate,
+  FanCoil,
+  Condenser,
   GLBModel,
 } from './models'
 
@@ -120,6 +122,10 @@ export function FurnitureModel({ item }: { item: Item }) {
       return <Shelter w={size.w} d={size.d} h={size.h} m={m} />
     case 'gate':
       return <Gate w={size.w} h={size.h} m={m} />
+    case 'fancoil':
+      return <FanCoil w={size.w} d={size.d} h={size.h} m={m} />
+    case 'condenser':
+      return <Condenser w={size.w} d={size.d} h={size.h} m={m} />
     case 'glb':
       return item.modelUrl ? (
         <Suspense fallback={null}>

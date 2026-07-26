@@ -3,6 +3,7 @@ import { dist, polygonArea, polygonCentroid } from '../../geometry/vec'
 import { num } from '../../lib/params'
 import { catalogById } from '../catalog/catalog'
 import { roomBBoxSize } from '../trace/rooms'
+import { AIRCON_KINDS, totalTrunkingLength } from '../aircon/aircon'
 
 // Render a clean top-down floor plan of the finished design to a PNG and
 // download it: walls, door/window symbols, room labels + areas, furniture
@@ -88,11 +89,13 @@ export function renderFloorPlan(p: Project): string {
     const legLen = num(it.params?.legLen, 1.0) * it.scale
     const cx = X(it.position.x)
     const cy = Y(it.position.z)
+    // Aircon hardware reads as its own layer, to match the trunking runs.
+    const isAircon = AIRCON_KINDS.has(entry.kind)
     ctx.save()
     ctx.translate(cx, cy)
     ctx.rotate(-it.rotationY)
-    ctx.fillStyle = 'rgba(120,140,170,0.18)'
-    ctx.strokeStyle = '#7a8aa3'
+    ctx.fillStyle = isAircon ? 'rgba(20,160,180,0.22)' : 'rgba(120,140,170,0.18)'
+    ctx.strokeStyle = isAircon ? '#0e8a9c' : '#7a8aa3'
     ctx.lineWidth = 1.2
     ctx.beginPath()
     ctx.rect((-w / 2) * scale, (-d / 2) * scale, w * scale, d * scale)
@@ -186,6 +189,39 @@ export function renderFloorPlan(p: Project): string {
     }
   }
 
+  // --- aircon trunking runs ---
+  // Dashed, so it reads as a service run above head height rather than something
+  // standing on the floor. The contractor gets the route, not just the units.
+  const runs = p.aircon?.runs ?? []
+  if (runs.length) {
+    ctx.save()
+    ctx.strokeStyle = '#0e8a9c'
+    ctx.lineWidth = 2
+    ctx.setLineDash([7, 4])
+    ctx.lineJoin = 'round'
+    for (const run of runs) {
+      if (run.points.length < 2) continue
+      ctx.beginPath()
+      run.points.forEach((pt, i) => {
+        if (i === 0) ctx.moveTo(X(pt.x), Y(pt.z))
+        else ctx.lineTo(X(pt.x), Y(pt.z))
+      })
+      ctx.stroke()
+    }
+    ctx.setLineDash([])
+    // a dot at each end so it's clear which units a run joins
+    ctx.fillStyle = '#0e8a9c'
+    for (const run of runs) {
+      for (const pt of [run.points[0], run.points[run.points.length - 1]]) {
+        if (!pt) continue
+        ctx.beginPath()
+        ctx.arc(X(pt.x), Y(pt.z), 3, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    ctx.restore()
+  }
+
   // --- room labels (on top of everything) ---
   let totalArea = 0
   for (const room of p.rooms) {
@@ -237,8 +273,12 @@ export function renderFloorPlan(p: Project): string {
   ctx.fillText(p.name || 'Floor Plan', 24, ty + 34)
   ctx.fillStyle = '#5b6472'
   ctx.font = '13px system-ui'
+  const trunking = p.aircon
+    ? totalTrunkingLength(p.aircon)
+    : 0
   ctx.fillText(
-    `${p.rooms.length} room(s) · ${p.items.length} item(s) · total floor area ${totalArea.toFixed(1)} m²`,
+    `${p.rooms.length} room(s) · ${p.items.length} item(s) · total floor area ${totalArea.toFixed(1)} m²` +
+      (trunking > 0 ? ` · ${trunking.toFixed(1)} m aircon trunking (dashed)` : ''),
     24,
     ty + 58,
   )

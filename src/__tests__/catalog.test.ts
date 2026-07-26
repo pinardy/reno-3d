@@ -13,7 +13,7 @@ const HANDLED = new Set([
   'sofa', 'bed', 'table', 'chair', 'wardrobe', 'rug', 'lamp', 'cabinet',
   'shelf', 'stool', 'tv', 'toilet', 'sink', 'bathtub', 'pendant',
   'piano', 'vase', 'plant', 'picture', 'appliance', 'hood', 'shower', 'toiletries',
-  'curtain', 'shelter', 'gate', 'glb',
+  'curtain', 'shelter', 'gate', 'fancoil', 'condenser', 'glb',
 ])
 
 describe('catalog', () => {

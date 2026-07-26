@@ -1,4 +1,4 @@
-import { X, Upload, Ruler, Minus, Box, Package, Keyboard } from 'lucide-react'
+import { X, Upload, Ruler, Minus, Box, Package, Keyboard, PencilRuler, AirVent } from 'lucide-react'
 import { useStore } from '../store/store'
 import { useIsCoarsePointer } from '../lib/device'
 
@@ -27,6 +27,16 @@ const STEPS = [
     icon: <Package size={18} />,
     title: '5 · Furnish & finish',
     body: 'Drag furniture in, recolour surfaces on the right, then check areas + the shopping-list budget. Everything autosaves in your browser.',
+  },
+  {
+    icon: <PencilRuler size={18} />,
+    title: '6 · Check the carpentry',
+    body: 'Cabinets and wardrobes against a wall become a run. Open one for a dimensioned elevation in mm and its foot run — the number carpentry is quoted per.',
+  },
+  {
+    icon: <AirVent size={18} />,
+    title: '7 · Plan the aircon',
+    body: 'Add fan coils and a condenser from the Aircon category, then Route trunking to see where the casing runs, how long the pipes are, and whether each room is sized right.',
   },
 ]
 

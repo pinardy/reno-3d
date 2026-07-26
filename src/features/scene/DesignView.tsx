@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Move, RotateCw, Info, Ruler, Map, Building2, PencilRuler, Sun, SquareStack, Sparkles } from 'lucide-react'
+import { Move, RotateCw, Info, Ruler, Map, Building2, PencilRuler, Sun, SquareStack, Sparkles, AirVent } from 'lucide-react'
 import { SceneRoot, type GroundPicker } from './SceneRoot'
 import { Compass } from './Compass'
 import { ViewsControl } from './ViewsControl'
@@ -21,6 +21,7 @@ export function DesignView() {
   const [dollhouse, setDollhouse] = useState(false)
   const [measure, setMeasure] = useState(false)
   const [showCeilings, setShowCeilings] = useState(false)
+  const [showTrunking, setShowTrunking] = useState(true)
   // the postprocessing pass (AO + bloom + AA) is too heavy for a phone GPU, so
   // start it off there — the toggle is still available if the device can take it
   const [hq, setHq] = useState(() => !isSmallScreen())
@@ -37,6 +38,8 @@ export function DesignView() {
   const hasContent = useStore(
     (s) => s.project.walls.length > 0 || s.project.items.length > 0,
   )
+  // Only worth a toolbar slot once there's trunking to hide.
+  const hasTrunking = useStore((s) => (s.project.aircon?.runs.length ?? 0) > 0)
 
   function onDrop(e: React.DragEvent) {
     e.preventDefault()
@@ -113,6 +116,7 @@ export function DesignView() {
           measure={measure}
           timeOfDay={timeOfDay}
           showCeilings={showCeilings}
+          showTrunking={showTrunking}
           hq={hq}
           onContextLost={setContextLost}
         />
@@ -193,6 +197,18 @@ export function DesignView() {
           >
             <SquareStack size={14} /> <span className="hidden sm:inline">Ceilings</span>
           </button>
+          {hasTrunking && (
+            <button
+              type="button"
+              title="Show the aircon trunking runs"
+              onClick={() => setShowTrunking((v) => !v)}
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ${
+                showTrunking ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
+              }`}
+            >
+              <AirVent size={14} /> <span className="hidden sm:inline">Trunking</span>
+            </button>
+          )}
           <button
             type="button"
             title="High-quality rendering (ambient occlusion, bloom, anti-aliasing)"

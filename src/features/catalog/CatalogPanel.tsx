@@ -17,6 +17,8 @@ import {
   Table,
   SprayCan,
   Boxes,
+  AirVent,
+  Fan,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useStore, storeApi } from '../../store/store'
@@ -51,6 +53,8 @@ const KIND_ICON: Partial<Record<ItemKind, LucideIcon>> = {
   shower: ShowerHead,
   appliance: WashingMachine,
   toiletries: SprayCan,
+  fancoil: AirVent,
+  condenser: Fan,
 }
 
 export function CatalogPanel() {

@@ -3,6 +3,9 @@ import { polygonArea } from '../../geometry/vec'
 import { renderFloorPlan } from './floorplanExport'
 import { shoppingList, furnitureTotal } from './shoppingList'
 import { captureScene } from '../scene/screenshot'
+import { elevationRuns, feetRun } from '../elevation/elevation'
+import { elevationDataUrl, runSummary } from '../elevation/elevationDraw'
+import { airconPlan, condensers, fanCoils, runLength, systemLabel } from '../aircon/aircon'
 
 const RATE_KEY = 'reno:costRatePerM2'
 
@@ -25,6 +28,29 @@ export function openSpecSheet(project: Project) {
 
   const date = new Date().toLocaleDateString()
 
+  // Carpentry elevations — the drawings a carpenter builds from, one per wall run.
+  const runs = elevationRuns(project)
+  const totalCarcass = runs.reduce((s, r) => s + r.carpentryRun, 0)
+  const elevationFigures = runs
+    .map(
+      (r) =>
+        `<figure class="elev"><img src="${elevationDataUrl(r, 1400)}"><figcaption>${esc(r.name)} — ${esc(runSummary(r))}</figcaption></figure>`,
+    )
+    .join('')
+
+  // Aircon: what's installed and how far the pipes have to run.
+  const acPlan = airconPlan(project)
+  const coils = fanCoils(project)
+  const outdoor = condensers(project)
+  const airconRows = acPlan.runs
+    .map((r) => {
+      const coil = coils.find((c) => c.id === r.fanCoilId)
+      const cond = outdoor.find((c) => c.id === r.condenserId)
+      return `<tr><td>${esc(coil?.name ?? 'Fan coil')}</td><td>${esc(cond?.name ?? 'Condenser')}</td><td class="num">${runLength(r.points).toFixed(1)} m</td></tr>`
+    })
+    .join('')
+  const airconTotal = acPlan.runs.reduce((s, r) => s + runLength(r.points), 0)
+
   const areaRows = areas
     .map((a) => `<tr><td>${esc(a.name)}</td><td class="num">${a.area.toFixed(1)} m²</td></tr>`)
     .join('')
@@ -45,6 +71,8 @@ export function openSpecSheet(project: Project) {
   .imgs figure { margin: 0; flex: 1 1 340px; }
   .imgs img { width: 100%; border: 1px solid #d7dae0; border-radius: 8px; }
   figcaption { font-size: 11px; color: #5b6472; margin-top: 4px; }
+  .elev { margin: 0 0 14px; break-inside: avoid; }
+  .elev img { width: 100%; border: 1px solid #d7dae0; border-radius: 6px; }
   h2 { font-size: 14px; border-bottom: 2px solid #1b2431; padding-bottom: 4px; margin: 20px 0 8px; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
   th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #e5e7eb; }
@@ -65,6 +93,34 @@ export function openSpecSheet(project: Project) {
   <table><tbody>${areaRows || '<tr><td>No rooms defined</td><td></td></tr>'}
     <tr><td><b>Total floor area</b></td><td class="num"><b>${totalArea.toFixed(1)} m²</b></td></tr>
   </tbody></table>
+
+  ${
+    runs.length
+      ? `<h2>Carpentry elevations</h2>
+  <p style="font-size:12px;color:#5b6472;margin:0 0 10px">
+    ${runs.length} run${runs.length > 1 ? 's' : ''} · ${totalCarcass.toFixed(2)} m (${feetRun(totalCarcass).toFixed(1)} ft) of carcass in total.
+    Dimensions in mm, AFF = above finished floor.
+  </p>
+  ${elevationFigures}`
+      : ''
+  }
+
+  ${
+    coils.length || outdoor.length
+      ? `<h2>Aircon</h2>
+  <p style="font-size:12px;color:#5b6472;margin:0 0 8px">
+    ${coils.length} fan coil${coils.length === 1 ? '' : 's'} · ${outdoor.length} condenser${outdoor.length === 1 ? '' : 's'}${systemLabel(project) ? ` · ${esc(systemLabel(project)!)}` : ''}
+  </p>
+  ${
+    airconRows
+      ? `<table><thead><tr><th>Fan coil</th><th>Condenser</th><th class="num">Pipe run</th></tr></thead>
+  <tbody>${airconRows}
+    <tr><td colspan="2"><b>Total trunking</b></td><td class="num"><b>${airconTotal.toFixed(1)} m</b></td></tr>
+  </tbody></table>`
+      : '<p style="font-size:12px;color:#5b6472">Trunking not routed yet.</p>'
+  }`
+      : ''
+  }
 
   <h2>Furniture shopping list</h2>
   <table><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Subtotal</th></tr></thead>

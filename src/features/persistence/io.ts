@@ -2,6 +2,7 @@ import {
   type Project,
   SCHEMA_VERSION,
   emptyProject,
+  emptyAirconPlan,
 } from '../../types/project'
 import { nanoid } from 'nanoid'
 
@@ -17,6 +18,16 @@ export function migrateProject(raw: Partial<Project>): Project {
     openings: raw.openings ?? [],
     rooms: raw.rooms ?? [],
     items: raw.items ?? [],
+  }
+  // Projects saved before aircon planning existed have no plan at all; ones saved
+  // mid-feature may be missing the trunking size. Leave it absent entirely when
+  // there was none, so an untouched project doesn't gain empty state.
+  if (raw.aircon) {
+    merged.aircon = {
+      ...emptyAirconPlan(),
+      ...raw.aircon,
+      runs: (raw.aircon.runs ?? []).filter((r) => Array.isArray(r.points) && r.points.length >= 2),
+    }
   }
   return merged
 }

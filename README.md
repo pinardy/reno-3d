@@ -48,12 +48,31 @@ Other scripts: `npm run build` (production build), `npm run preview`.
    **hinge-side** control; openings can be door / window / cased / sliding. HDB
    fixtures (household shelter, gate, bay window, aircon ledge) live under the **HDB**
    catalog category.
-10. **Budget** — the right panel shows per-room + total floor area with a rough reno
+10. **Carpentry elevations** — place cabinets, wardrobes or shelving against a wall
+    and the right panel lists the **runs** it finds (base and wall units against one
+    wall are one drawing, the way a carpenter draws them). Click a run for a
+    dimensioned front elevation in millimetres — panel fronts, worktop, hatched
+    appliance gaps, per-unit and overall dimension chains, heights above finished
+    floor — and its **foot run**, which is what carpentry is quoted per. Download one
+    elevation or all of them as a PNG sheet.
+11. **Aircon** — drop fan coils and a condenser from the **Aircon** category, then
+    **Route trunking**: each fan coil is routed to the nearest condenser with a spare
+    port along a right-angled path that hugs a wall, and the casing is drawn in 3D at
+    ceiling height so you can see where it actually runs before it's built. The panel
+    reports the **System N** size, per-room **BTU sizing** (~650 BTU/m², up a fifth
+    for west-facing rooms), pipe-run lengths, and checks for undersized or oversized
+    units, too many fan coils for the condenser, over-long pipe runs, a condenser off
+    the ledge, and a fan coil blowing straight onto a bed.
+12. **Budget** — the right panel shows per-room + total floor area with a rough reno
     estimate, plus a **furniture total** and a **shopping-list CSV export** (ballpark
     per-item prices you can replace with real quotes).
-11. **Share & export** (top bar) — a printable **PDF spec sheet** (plan + render +
-    budget), **glTF/.glb** export of the 3D model, a **share link** (design without the
-    background image), plus PNG floor plan / screenshot and `.json` import/export.
+13. **Save, share & export** — autosaves to your browser (IndexedDB). From the top
+    bar: a printable **PDF spec sheet** (plan + render + carpentry elevations + aircon
+    schedule + budget), a **top-down floor plan PNG** (walls, door/window symbols,
+    room areas, furniture footprints, dashed aircon trunking, dimensions + scale bar),
+    **glTF/.glb** export of the 3D model, a **3D screenshot** (camera icon, in 3D
+    view), a **share link** (design without the background image), and `.json`
+    import/export.
 
 Installable as a **PWA** (works offline once loaded), and the 2D editor supports
 **pinch-zoom / two-finger pan** on touch devices. New to it? The **? Help** button
@@ -65,10 +84,12 @@ templates come pre-marked), and open the **HDB renovation checklist** (shield ic
 a tick-off list of reno rules (permits, no hacking structural walls / the household
 shelter, flooring weight, waterproofing, windows, aircon). It's general guidance to
 confirm with HDB and a registered contractor — not legal advice.
-10. **Save / share** — autosaves to your browser (IndexedDB). From the top bar:
-    export/import `.json`, export a **top-down floor plan PNG** (map icon: walls,
-    door/window symbols, room areas, furniture footprints, dimensions + scale bar),
-    or capture a **3D screenshot** (camera icon, in 3D view).
+
+Two things worth doing before you sign a quote: route the **aircon trunking** (the
+casing is permanent and visible, and this is where you find out it crosses the
+living room wall), and open the **carpentry elevations** — the foot run there is
+directly comparable to what a carpenter quotes, and the drawing is what actually
+gets built.
 
 ### Keyboard shortcuts
 
@@ -89,6 +110,19 @@ cancel / deselect · Space-drag or right-drag to pan · scroll to zoom.
   traversal and splits walls at T-junctions.
 - **Furniture** (`src/features/catalog/`): parametric models (no external assets);
   `.glb` import is supported via `useGLTF`.
+- **Checks** (`src/features/checks/`): pure passes over the project that flag
+  clashes, items sunk in walls, blocked door swings, tall units with no room to
+  open, and pieces that won't fit through the door — plus which way each room's
+  glazing faces, and so when it takes sun. Walkway widths are deliberately not
+  checked (see the note in `clearance.ts`).
+- **Elevations** (`src/features/elevation/`): carpentry items are grouped into wall
+  runs by facing direction, back plane and adjacency along the wall (union-find), so
+  base and wall units against one wall become one drawing. `elevationDraw.ts`
+  renders each run to a canvas as a dimensioned shop drawing.
+- **Aircon** (`src/features/aircon/`): fan coils and condensers are ordinary catalog
+  items, so they inherit placement, wall snapping and pricing. Trunking is a separate
+  polyline per run on the project; routing picks whichever right-angled elbow keeps
+  more of the path within 0.45 m of a wall, sampled along the route.
 - **Materials** (`src/features/materials/`): procedural canvas textures (wood, tile,
   marble, carpet, …) so nothing is fetched over the network.
 - **Persistence** (`src/features/persistence/`): debounced autosave to IndexedDB

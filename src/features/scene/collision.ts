@@ -14,6 +14,8 @@ export const WALL_SNAP_KINDS: ReadonlySet<ItemKind> = new Set<ItemKind>([
   'sink',
   'tv',
   'hood',
+  'fancoil',
+  'condenser',
 ])
 
 // Push a walker position out of any wall it penetrates. Openings that are open

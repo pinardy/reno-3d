@@ -18,6 +18,7 @@ import { WallsGroup, CornerPosts } from './Walls'
 import { RoomFloor } from './Floors'
 import { ItemsGroup } from './Items'
 import { WalkControls } from './controls'
+import { TrunkingGroup } from '../aircon/Trunking'
 
 // postprocessing + n8ao are ~820KB of the 3D bundle, for a pass that phones
 // start with switched off. Load them only once HQ is actually asked for.
@@ -34,6 +35,7 @@ export function SceneRoot({
   measure,
   timeOfDay,
   showCeilings,
+  showTrunking,
   hq,
   onContextLost,
 }: {
@@ -44,6 +46,7 @@ export function SceneRoot({
   measure: boolean
   timeOfDay: number // 0..1, 0.5 = midday
   showCeilings: boolean
+  showTrunking: boolean
   hq: boolean
   onContextLost: (lost: boolean) => void
 }) {
@@ -51,6 +54,7 @@ export function SceneRoot({
   const rooms = useStore((s) => s.project.rooms)
   const items = useStore((s) => s.project.items)
   const openings = useStore((s) => s.project.openings)
+  const aircon = useStore((s) => s.project.aircon)
   const cameraMode = useStore((s) => s.cameraMode)
 
   const { camera, gl, raycaster, scene } = useThree()
@@ -233,6 +237,7 @@ export function SceneRoot({
           gizmoMode={gizmoMode}
           enabled={cameraMode === 'orbit' && !measure}
         />
+        {showTrunking && <TrunkingGroup plan={aircon} />}
       </group>
 
       {showDimensions && <DimensionLabels />}

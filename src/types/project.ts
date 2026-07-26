@@ -78,6 +78,8 @@ export type ItemKind =
   | 'curtain' // curtains / blinds panel
   | 'shelter' // HDB household shelter (bomb shelter)
   | 'gate' // HDB metal gate
+  | 'fancoil' // aircon indoor unit (wall-mounted blower)
+  | 'condenser' // aircon outdoor compressor (sits on the ledge)
   | 'glb' // external model
 
 export interface Item {
@@ -106,6 +108,28 @@ export interface FloorPlan {
   // 1 image pixel = 1/pxPerMeter metres.
 }
 
+/**
+ * Refrigerant pipe + drain trunking from one fan coil back to its condenser.
+ * `points` is the plan polyline (metres) from the fan coil end to the condenser
+ * end; the run itself sits at `y` metres above the floor, usually tucked just
+ * under the ceiling where a bulkhead or a length of casing would hide it.
+ */
+export interface TrunkingRun {
+  id: string
+  fanCoilId: string // item id, kind 'fancoil'
+  condenserId: string // item id, kind 'condenser'
+  points: Vec2[]
+  y: number // centre height of the run above the floor (metres)
+  /** Set once the corner has been flipped by hand, so re-routing keeps the choice. */
+  elbowOf?: 'x' | 'z'
+}
+
+export interface AirconPlan {
+  runs: TrunkingRun[]
+  trunkingW: number // casing cross-section width (metres)
+  trunkingH: number // casing cross-section height (metres)
+}
+
 export interface Project {
   schemaVersion: number
   id: string
@@ -120,6 +144,14 @@ export interface Project {
   wallThickness: number // default wall thickness (metres)
   orientationDeg: number // compass bearing that screen-up / plan-up faces (0 = North up)
   views?: SavedView[] // optional so older saved projects load unchanged
+  aircon?: AirconPlan // optional for the same reason
+}
+
+export const DEFAULT_TRUNKING_W = 0.1
+export const DEFAULT_TRUNKING_H = 0.1
+
+export function emptyAirconPlan(): AirconPlan {
+  return { runs: [], trunkingW: DEFAULT_TRUNKING_W, trunkingH: DEFAULT_TRUNKING_H }
 }
 
 /** A parked camera position, so a layout can be shown from the same angle twice. */

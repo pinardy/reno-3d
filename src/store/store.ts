@@ -10,8 +10,10 @@ import {
   type Room,
   type Item,
   emptyProject,
+  emptyAirconPlan,
 } from '../types/project'
 import { pointInPolygon } from '../geometry/vec'
+import { autoRoute, elbowOfRun, routeTrunking, pruneRuns } from '../features/aircon/aircon'
 
 export type EditorMode = 'trace' | 'design'
 export type TraceTool = 'select' | 'scale' | 'wall' | 'door' | 'window' | 'room'
@@ -300,6 +302,42 @@ export const storeApi = {
       }
     })
   },
+  // ---- aircon ----
+  // Re-route every fan coil back to a condenser. Safe to call repeatedly: runs
+  // are keyed by fan coil, so re-routing after moving a unit updates its path
+  // instead of stacking up duplicates.
+  autoRouteTrunking() {
+    const st = useStore.getState()
+    const runs = autoRoute(st.project)
+    st.commit((p) => {
+      p.aircon = { ...emptyAirconPlan(), ...(p.aircon ?? {}), runs }
+    })
+    return runs.length
+  },
+  /** Send a run round the other side of the corner. */
+  flipTrunkingElbow(runId: string) {
+    useStore.getState().commit((p) => {
+      const run = p.aircon?.runs.find((r) => r.id === runId)
+      if (!run) return
+      const next = elbowOfRun(run) === 'x' ? 'z' : 'x'
+      const from = run.points[0]
+      const to = run.points[run.points.length - 1]
+      if (!from || !to) return
+      run.points = routeTrunking(from, to, p.walls, next)
+      run.elbowOf = next
+    })
+  },
+  clearTrunking() {
+    useStore.getState().commit((p) => {
+      if (p.aircon) p.aircon.runs = []
+    })
+  },
+  setTrunkingSize(w: number, h: number) {
+    useStore.getState().commit((p) => {
+      p.aircon = { ...emptyAirconPlan(), ...(p.aircon ?? {}), trunkingW: w, trunkingH: h }
+    })
+  },
+
   duplicateSelectedItem() {
     const st = useStore.getState()
     const ids = st.selectedItemIds.length
@@ -338,6 +376,7 @@ export const storeApi = {
     if (selectedItemIds.length > 0) {
       commit((p) => {
         p.items = p.items.filter((i) => !selectedItemIds.includes(i.id))
+        dropOrphanRuns(p)
       })
       clearSelection()
       return
@@ -364,8 +403,18 @@ export const storeApi = {
         p.rooms = p.rooms.filter((r) => r.id !== selection.id)
       } else if (selection.type === 'item') {
         p.items = p.items.filter((i) => i.id !== selection.id)
+        dropOrphanRuns(p)
       }
     })
     clearSelection()
   },
+}
+
+/**
+ * Deleting a fan coil or condenser leaves its trunking pointing at nothing, so
+ * those runs go with it. Call inside a commit recipe, after the items are gone.
+ */
+function dropOrphanRuns(p: Project) {
+  if (!p.aircon) return
+  p.aircon.runs = pruneRuns(p)
 }

@@ -6,6 +6,8 @@ import { TraceToolsPanel } from '../features/trace/TraceToolsPanel'
 import { Inspector } from '../features/inspector/Inspector'
 import { ProjectSummary } from '../features/inspector/ProjectSummary'
 import { ChecksPanel } from '../features/checks/ChecksPanel'
+import { ElevationPanel } from '../features/elevation/ElevationPanel'
+import { AirconPanel } from '../features/aircon/AirconPanel'
 
 type Sheet = 'tools' | 'details'
 
@@ -57,6 +59,8 @@ export function MobilePanels() {
                 <Inspector />
                 <ProjectSummary />
                 <ChecksPanel />
+                <ElevationPanel />
+                <AirconPanel />
               </>
             )}
           </div>

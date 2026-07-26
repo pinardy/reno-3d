@@ -14,6 +14,7 @@ export type Category =
   | 'Bathroom'
   | 'Office'
   | 'Decor'
+  | 'Aircon'
   | 'HDB'
 
 export interface CatalogEntry {
@@ -57,6 +58,8 @@ const PRICE_BY_KIND: Record<ItemKind, number> = {
   curtain: 150,
   shelter: 0,
   gate: 400,
+  fancoil: 700,
+  condenser: 1400,
   glb: 0,
 }
 
@@ -645,6 +648,78 @@ export const CATALOG: CatalogEntry[] = [
     params: { mirror: true, round: true },
   },
 
+  // ===== Aircon =====
+  // A Singapore "System N" is one outdoor condenser driving N indoor fan coils.
+  // Sizes follow the usual wall-mounted units; the BTU rating in params is what
+  // the capacity check sizes each room against. Fan coils default to 2.3 m up the
+  // wall and condensers to 0.35 m, the height of the HDB aircon ledge.
+  {
+    id: 'fancoil-9k',
+    kind: 'fancoil',
+    name: 'Fan Coil 9,000 BTU',
+    category: 'Aircon',
+    size: { w: 0.8, d: 0.2, h: 0.29 },
+    material: makeMaterial({ color: '#f2f3f5', roughness: 0.35 }),
+    params: { btu: 9000 },
+    baseY: 2.3,
+    price: 550,
+  },
+  {
+    id: 'fancoil-12k',
+    kind: 'fancoil',
+    name: 'Fan Coil 12,000 BTU',
+    category: 'Aircon',
+    size: { w: 0.9, d: 0.21, h: 0.3 },
+    material: makeMaterial({ color: '#f2f3f5', roughness: 0.35 }),
+    params: { btu: 12000 },
+    baseY: 2.3,
+    price: 700,
+  },
+  {
+    id: 'fancoil-18k',
+    kind: 'fancoil',
+    name: 'Fan Coil 18,000 BTU',
+    category: 'Aircon',
+    size: { w: 1.1, d: 0.24, h: 0.32 },
+    material: makeMaterial({ color: '#f2f3f5', roughness: 0.35 }),
+    params: { btu: 18000 },
+    baseY: 2.3,
+    price: 950,
+  },
+  {
+    id: 'condenser-sys2',
+    kind: 'condenser',
+    name: 'Condenser (System 2)',
+    category: 'Aircon',
+    size: { w: 0.8, d: 0.3, h: 0.55 },
+    material: makeMaterial({ color: '#dcdfe3', roughness: 0.5, metalness: 0.3 }),
+    params: { fancoils: 2, btu: 18000 },
+    baseY: 0.35,
+    price: 900,
+  },
+  {
+    id: 'condenser-sys3',
+    kind: 'condenser',
+    name: 'Condenser (System 3)',
+    category: 'Aircon',
+    size: { w: 0.88, d: 0.33, h: 0.72 },
+    material: makeMaterial({ color: '#dcdfe3', roughness: 0.5, metalness: 0.3 }),
+    params: { fancoils: 3, btu: 27000 },
+    baseY: 0.35,
+    price: 1100,
+  },
+  {
+    id: 'condenser-sys4',
+    kind: 'condenser',
+    name: 'Condenser (System 4)',
+    category: 'Aircon',
+    size: { w: 0.95, d: 0.34, h: 0.9 },
+    material: makeMaterial({ color: '#dcdfe3', roughness: 0.5, metalness: 0.3 }),
+    params: { fancoils: 4, btu: 34000 },
+    baseY: 0.35,
+    price: 1400,
+  },
+
   // ===== HDB-specific fixtures =====
   {
     id: 'household-shelter',
@@ -1176,6 +1251,7 @@ export const CATEGORIES: Category[] = [
   'Bathroom',
   'Office',
   'Decor',
+  'Aircon',
   'HDB',
 ]
 
