@@ -16,7 +16,8 @@ interface Row {
   updatedAt: number
 }
 
-export function ProjectsMenu() {
+/** `compact` drops the label so the trigger fits a phone header. */
+export function ProjectsMenu({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false)
   const [rows, setRows] = useState<Row[]>([])
   const currentId = useStore((s) => s.project.id)
@@ -75,9 +76,10 @@ export function ProjectsMenu() {
         type="button"
         title="Projects"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-8 items-center gap-1.5 rounded px-2.5 text-xs text-neutral-300 hover:bg-panel2"
+        className="flex h-8 shrink-0 items-center gap-1.5 rounded px-2.5 text-xs text-neutral-300 hover:bg-panel2"
       >
-        <FolderOpen size={15} /> Projects
+        <FolderOpen size={15} />
+        {!compact && 'Projects'}
       </button>
 
       {open && (
