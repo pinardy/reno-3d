@@ -5,7 +5,7 @@ import type { Item, Project, Vec2 } from '../../types/project'
 import { catalogById } from '../catalog/catalog'
 import { FurnitureModel } from '../catalog/FurnitureModel'
 import { num } from '../../lib/params'
-import { snapCabinetToWall } from './collision'
+import { snapCabinetToWall, WALL_SNAP_KINDS } from './collision'
 import { isPanModifierHeld } from './panModifier'
 import { alignToItems, snapAngle, type Guide } from './alignment'
 
@@ -64,9 +64,10 @@ export function ItemsGroup({
             setGuides(al.guides)
           }
           const dItem = useStore.getState().project.items.find((i) => i.id === id)
-          // kitchen cabinets snap their back against a nearby wall
+          // cabinets, wardrobes, shelving and appliances snap their back to a
+          // nearby wall (grid-snap with Shift opts out)
           let snapped: { x: number; z: number; rotationY: number } | null = null
-          if (dItem?.kind === 'cabinet' && !e.shiftKey) {
+          if (dItem && WALL_SNAP_KINDS.has(dItem.kind) && !e.shiftKey) {
             const entry = catalogById(dItem.catalogId)
             const depth = num(dItem.params?.depth, entry?.size.d ?? 0.6)
             snapped = snapCabinetToWall(

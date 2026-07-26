@@ -11,6 +11,7 @@ import {
   type Item,
   emptyProject,
 } from '../types/project'
+import { pointInPolygon } from '../geometry/vec'
 
 export type EditorMode = 'trace' | 'design'
 export type TraceTool = 'select' | 'scale' | 'wall' | 'door' | 'window' | 'room'
@@ -232,6 +233,72 @@ export const storeApi = {
       p.items.push({ ...it, id })
     })
     return id
+  },
+  // Drop a whole furniture set (or any batch) in one undo step, and leave them
+  // all selected so the group can be nudged into place immediately.
+  addItems(its: Omit<Item, 'id'>[]): string[] {
+    if (!its.length) return []
+    const ids = its.map(() => nanoid())
+    useStore.getState().commit((p) => {
+      its.forEach((it, i) => p.items.push({ ...it, id: ids[i] }))
+    })
+    useStore.setState({
+      selectedItemIds: ids,
+      selection: { type: 'item', id: ids[ids.length - 1] },
+    })
+    return ids
+  },
+  // Copy a room's floor plus the furniture standing on it, offset a little so the
+  // copy is visible and grabbable. Walls are left alone — they're shared edges,
+  // not owned by one room, so cloning them would double every partition.
+  duplicateRoom(id: string) {
+    const st = useStore.getState()
+    const room = st.project.rooms.find((r) => r.id === id)
+    if (!room) return
+    const OFF = 0.5
+    const inside = st.project.items.filter((it) => pointInPolygon(it.position, room.loop))
+    const newRoomId = nanoid()
+    st.commit((p) => {
+      p.rooms.push({
+        ...room,
+        id: newRoomId,
+        name: `${room.name} copy`,
+        loop: room.loop.map((v) => ({ x: v.x + OFF, z: v.z + OFF })),
+        floorMaterial: { ...room.floorMaterial },
+        ceilingMaterial: { ...room.ceilingMaterial },
+      })
+      for (const it of inside) {
+        p.items.push({
+          ...it,
+          id: nanoid(),
+          position: { x: it.position.x + OFF, z: it.position.z + OFF },
+          material: { ...it.material },
+          params: it.params ? { ...it.params } : undefined,
+        })
+      }
+    })
+    useStore.setState({ selection: { type: 'room', id: newRoomId }, selectedItemIds: [] })
+  },
+  // Flip a room and its furniture left-to-right across the room's own centre, in
+  // place. The everyday use is a mirror-image bedroom in a symmetric HDB layout:
+  // arrange one side, then mirror it. Reflecting x negates a Y-rotation.
+  mirrorRoom(id: string) {
+    const st = useStore.getState()
+    const room = st.project.rooms.find((r) => r.id === id)
+    if (!room || room.loop.length < 3) return
+    const cx = room.loop.reduce((s, v) => s + v.x, 0) / room.loop.length
+    const inside = new Set(
+      st.project.items.filter((it) => pointInPolygon(it.position, room.loop)).map((it) => it.id),
+    )
+    st.commit((p) => {
+      const r = p.rooms.find((x) => x.id === id)
+      if (r) r.loop = r.loop.map((v) => ({ x: 2 * cx - v.x, z: v.z }))
+      for (const it of p.items) {
+        if (!inside.has(it.id)) continue
+        it.position = { x: 2 * cx - it.position.x, z: it.position.z }
+        it.rotationY = -it.rotationY
+      }
+    })
   },
   duplicateSelectedItem() {
     const st = useStore.getState()

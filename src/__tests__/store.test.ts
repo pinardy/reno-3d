@@ -103,3 +103,61 @@ describe('undo / redo', () => {
     expect(useStore.getState().project.walls.length).toBe(0)
   })
 })
+
+describe('duplicate and mirror rooms', () => {
+  it('duplicates a room and the furniture standing on it', () => {
+    const room = useStore.getState().project.rooms[0]
+    const inside = useStore
+      .getState()
+      .project.items.filter((i) => {
+        // rough: items whose position is within the room's bbox
+        const xs = room.loop.map((v) => v.x)
+        const zs = room.loop.map((v) => v.z)
+        return (
+          i.position.x >= Math.min(...xs) &&
+          i.position.x <= Math.max(...xs) &&
+          i.position.z >= Math.min(...zs) &&
+          i.position.z <= Math.max(...zs)
+        )
+      }).length
+    const beforeRooms = useStore.getState().project.rooms.length
+    const beforeItems = useStore.getState().project.items.length
+
+    storeApi.duplicateRoom(room.id)
+
+    expect(useStore.getState().project.rooms.length).toBe(beforeRooms + 1)
+    // at least the room itself is added; contained items ride along
+    expect(useStore.getState().project.items.length).toBeGreaterThanOrEqual(
+      beforeItems + inside,
+    )
+    useStore.getState().undo()
+    expect(useStore.getState().project.rooms.length).toBe(beforeRooms)
+    expect(useStore.getState().project.items.length).toBe(beforeItems)
+  })
+
+  it('mirrors a room in place across its centre, flipping rotation', () => {
+    const room = useStore.getState().project.rooms[0]
+    const cx = room.loop.reduce((s, v) => s + v.x, 0) / room.loop.length
+    const target = useStore
+      .getState()
+      .project.items.find((i) => {
+        const xs = room.loop.map((v) => v.x)
+        const zs = room.loop.map((v) => v.z)
+        return (
+          i.position.x > Math.min(...xs) &&
+          i.position.x < Math.max(...xs) &&
+          i.position.z > Math.min(...zs) &&
+          i.position.z < Math.max(...zs)
+        )
+      })
+    if (!target) return // nothing inside to assert on
+    const before = { x: target.position.x, z: target.position.z, rot: target.rotationY }
+
+    storeApi.mirrorRoom(room.id)
+
+    const after = useStore.getState().project.items.find((i) => i.id === target.id)!
+    expect(after.position.x).toBeCloseTo(2 * cx - before.x, 5)
+    expect(after.position.z).toBeCloseTo(before.z, 5)
+    expect(after.rotationY).toBeCloseTo(-before.rot, 5)
+  })
+})

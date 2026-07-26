@@ -1,4 +1,4 @@
-import { Trash2, Home, Copy, Boxes } from 'lucide-react'
+import { Trash2, Home, Copy, Boxes, FlipHorizontal2 } from 'lucide-react'
 import { useStore, storeApi } from '../../store/store'
 import { Section, Row, NumberInput, TextInput } from '../../app/ui'
 import { MaterialEditor } from '../materials/MaterialEditor'
@@ -287,6 +287,26 @@ function RoomInspector() {
         </Section>
       )}
       <Section title="Actions">
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => storeApi.duplicateRoom(id)}
+            className="flex w-full items-center justify-center gap-2 rounded bg-panel2 py-2 text-xs text-neutral-300 hover:bg-edge"
+          >
+            <Copy size={14} /> Duplicate room
+          </button>
+          <button
+            type="button"
+            onClick={() => storeApi.mirrorRoom(id)}
+            className="flex w-full items-center justify-center gap-2 rounded bg-panel2 py-2 text-xs text-neutral-300 hover:bg-edge"
+          >
+            <FlipHorizontal2 size={14} /> Mirror left–right
+          </button>
+        </div>
+        <p className="mt-2 text-[10px] leading-relaxed text-neutral-500">
+          Duplicate and mirror carry the furniture standing on the floor with
+          them; walls are shared edges and stay put.
+        </p>
         <DeleteButton label="room floor" />
       </Section>
     </div>

@@ -16,6 +16,7 @@ import {
   WashingMachine,
   Table,
   SprayCan,
+  Boxes,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useStore, storeApi } from '../../store/store'
@@ -31,6 +32,7 @@ import {
 import { polygonCentroid } from '../../geometry/vec'
 import { getFocusPoint } from '../scene/focus'
 import { clearOf } from './placement'
+import { FURNITURE_SETS, type FurnitureSet } from './sets'
 import { useIsCoarsePointer } from '../../lib/device'
 
 const KIND_ICON: Partial<Record<ItemKind, LucideIcon>> = {
@@ -73,6 +75,10 @@ export function CatalogPanel() {
   function addAtDefault(entry: CatalogEntry) {
     const id = storeApi.addItem(newItemFromCatalog(entry, defaultPos()))
     useStore.getState().select({ type: 'item', id })
+  }
+
+  function addSet(set: FurnitureSet) {
+    storeApi.addItems(set.make(defaultPos()))
   }
 
   function onImportGlb(e: React.ChangeEvent<HTMLInputElement>) {
@@ -160,6 +166,39 @@ export function CatalogPanel() {
             </button>
           ))}
         </div>
+      </Section>
+
+      <Section title="Room sets">
+        <div className="space-y-1.5">
+          {FURNITURE_SETS.map((set) => (
+            <button
+              key={set.id}
+              type="button"
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData('text/catalog-set', set.id)
+                e.dataTransfer.effectAllowed = 'copy'
+              }}
+              onClick={() => addSet(set)}
+              title={
+                coarse
+                  ? `${set.name} set — tap to place it in view`
+                  : `${set.name} set — drag into the scene or click to add`
+              }
+              className="flex w-full cursor-grab items-center gap-2 rounded-lg border border-edge bg-panel2 p-2 text-left transition-colors hover:border-accent/60 hover:bg-edge active:cursor-grabbing"
+            >
+              <Boxes size={16} className="shrink-0 text-accent" />
+              <span className="min-w-0">
+                <span className="block text-[12px] leading-tight text-neutral-200">{set.name}</span>
+                <span className="block text-[10px] leading-tight text-neutral-500">{set.hint}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-1.5 text-[10px] leading-relaxed text-neutral-500">
+          Drops a grouped starter arrangement you can then nudge into place — they
+          land selected, so drag any piece to move the whole group.
+        </p>
       </Section>
 
       <Section title="Custom model">

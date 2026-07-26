@@ -6,6 +6,8 @@ import { Compass } from './Compass'
 import { ViewsControl } from './ViewsControl'
 import { useStore, storeApi } from '../../store/store'
 import { catalogById, newItemFromCatalog } from '../catalog/catalog'
+import { setById } from '../catalog/sets'
+import { snapCabinetToWall, WALL_SNAP_KINDS } from './collision'
 import { makeSampleProject } from '../sample/sample'
 import { TEMPLATES } from '../sample/templates'
 import { exportFloorPlanPNG } from '../persistence/floorplanExport'
@@ -38,12 +40,30 @@ export function DesignView() {
 
   function onDrop(e: React.DragEvent) {
     e.preventDefault()
+    const pos = pickerRef.current?.(e.clientX, e.clientY) ?? { x: 0, z: 0 }
+
+    // a whole furniture set
+    const setId = e.dataTransfer.getData('text/catalog-set')
+    if (setId) {
+      const set = setById(setId)
+      if (set) storeApi.addItems(set.make(pos))
+      return
+    }
+
+    // a single catalog item
     const id = e.dataTransfer.getData('text/catalog-id')
     if (!id) return
     const entry = catalogById(id)
     if (!entry) return
-    const pos = pickerRef.current?.(e.clientX, e.clientY) ?? { x: 0, z: 0 }
     const item = newItemFromCatalog(entry, pos)
+    // wall-hugging pieces snap their back to a nearby wall on drop, as on drag
+    if (WALL_SNAP_KINDS.has(entry.kind)) {
+      const snapped = snapCabinetToWall(pos, entry.size.d, useStore.getState().project.walls)
+      if (snapped) {
+        item.position = { x: snapped.x, z: snapped.z }
+        item.rotationY = snapped.rotationY
+      }
+    }
     const newId = storeApi.addItem(item)
     useStore.getState().select({ type: 'item', id: newId })
   }

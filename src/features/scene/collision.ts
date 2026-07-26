@@ -1,7 +1,20 @@
 import type * as THREE from 'three'
-import type { Vec2, Wall } from '../../types/project'
+import type { ItemKind, Vec2, Wall } from '../../types/project'
 import { projectOnSegment, dist } from '../../geometry/vec'
 import { useStore } from '../../store/store'
+
+// Kinds that belong flush against a wall, so dragging one near a wall snaps its
+// back to it (like a cabinet). Free-standing pieces — sofas, tables, beds, rugs —
+// are deliberately excluded; snapping those fights the user more than it helps.
+export const WALL_SNAP_KINDS: ReadonlySet<ItemKind> = new Set<ItemKind>([
+  'cabinet',
+  'wardrobe',
+  'shelf',
+  'appliance',
+  'sink',
+  'tv',
+  'hood',
+])
 
 // Push a walker position out of any wall it penetrates. Openings that are open
 // at the given eye height (doors always; windows only within their vertical
