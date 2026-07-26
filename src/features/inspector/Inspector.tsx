@@ -1,4 +1,4 @@
-import { Trash2, Home, Copy, Boxes, FlipHorizontal2 } from 'lucide-react'
+import { Trash2, Home, Copy, Boxes, FlipHorizontal2, ClipboardCopy, ClipboardPaste } from 'lucide-react'
 import { useStore, storeApi } from '../../store/store'
 import { Section, Row, NumberInput, TextInput } from '../../app/ui'
 import { MaterialEditor } from '../materials/MaterialEditor'
@@ -46,6 +46,36 @@ function DeleteButton({ label }: { label: string }) {
   )
 }
 
+/** Shared clipboard pair, so copy/paste looks the same wherever it appears. */
+function ClipboardButtons({ copyLabel }: { copyLabel: string }) {
+  const clipboard = useStore((s) => s.clipboard.length)
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => storeApi.copyItems()}
+        className="flex w-full items-center justify-center gap-2 rounded bg-panel2 py-2 text-xs text-neutral-300 hover:bg-edge"
+      >
+        <ClipboardCopy size={14} /> {copyLabel} (Cmd/Ctrl+C)
+      </button>
+      {clipboard > 0 && <PasteButton count={clipboard} />}
+    </>
+  )
+}
+
+function PasteButton({ count }: { count: number }) {
+  return (
+    <button
+      type="button"
+      onClick={() => storeApi.pasteItems()}
+      title="Pastes where the camera is looking"
+      className="flex w-full items-center justify-center gap-2 rounded bg-panel2 py-2 text-xs text-neutral-300 hover:bg-edge"
+    >
+      <ClipboardPaste size={14} /> Paste {count > 1 ? `${count} items` : ''} (Cmd/Ctrl+V)
+    </button>
+  )
+}
+
 function MultiInspector({ count }: { count: number }) {
   return (
     <Section title={`${count} items selected`}>
@@ -60,6 +90,7 @@ function MultiInspector({ count }: { count: number }) {
         >
           <Copy size={14} /> Duplicate all
         </button>
+        <ClipboardButtons copyLabel="Copy all" />
         <button
           type="button"
           onClick={() => storeApi.removeSelected()}
@@ -84,6 +115,9 @@ function EmptyInspector() {
   const openings = useStore((s) => s.project.openings.length)
   const items = useStore((s) => s.project.items.length)
   const counts = { walls, rooms, openings, items }
+  // Copying then pressing Esc is a normal way to work, so paste has to stay
+  // reachable with nothing selected — not just from a selected item's inspector.
+  const clipboard = useStore((s) => s.clipboard.length)
   return (
     <div>
       <Section title="Home">
@@ -94,6 +128,11 @@ function EmptyInspector() {
           Select a wall, room, opening or piece of furniture to edit its
           properties, colour and materials here.
         </p>
+        {clipboard > 0 && (
+          <div className="mt-3">
+            <PasteButton count={clipboard} />
+          </div>
+        )}
       </Section>
       <Section title="Project">
         <div className="grid grid-cols-2 gap-2 text-xs text-neutral-400">
@@ -589,13 +628,16 @@ function ItemInspector() {
 
       <Section title="Material">
         <MaterialEditor material={item.material} onChange={patchMat} />
-        <button
-          type="button"
-          onClick={() => storeApi.duplicateSelectedItem()}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded bg-panel2 py-2 text-xs text-neutral-300 hover:bg-edge"
-        >
-          <Copy size={14} /> Duplicate (Cmd/Ctrl+D)
-        </button>
+        <div className="mt-2 space-y-2">
+          <button
+            type="button"
+            onClick={() => storeApi.duplicateSelectedItem()}
+            className="flex w-full items-center justify-center gap-2 rounded bg-panel2 py-2 text-xs text-neutral-300 hover:bg-edge"
+          >
+            <Copy size={14} /> Duplicate (Cmd/Ctrl+D)
+          </button>
+          <ClipboardButtons copyLabel="Copy" />
+        </div>
         <DeleteButton label="item" />
       </Section>
     </div>

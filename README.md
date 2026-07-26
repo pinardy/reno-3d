@@ -94,8 +94,15 @@ gets built.
 ### Keyboard shortcuts
 
 `V` select · `S` scale · `W` wall · `D` door · `N` window · `R` room ·
-`Cmd/Ctrl+Z` undo · `Shift+Cmd/Ctrl+Z` redo · `Delete` remove selection · `Esc`
-cancel / deselect · Space-drag or right-drag to pan · scroll to zoom.
+`Cmd/Ctrl+Z` undo · `Shift+Cmd/Ctrl+Z` redo · `Cmd/Ctrl+D` duplicate ·
+`Cmd/Ctrl+C` / `Cmd/Ctrl+V` copy / paste furniture · `Delete` remove selection ·
+`Esc` cancel / deselect · Space-drag or right-drag to pan · scroll to zoom.
+
+Paste lands where the camera is looking, so you can copy a chair in one room,
+orbit to another and paste it there; repeated pastes step aside instead of piling
+up. Copying a multi-selection keeps the group's arrangement, and the clipboard
+survives switching projects, so you can lift a furnished corner from one flat
+into another.
 
 ## How it works
 

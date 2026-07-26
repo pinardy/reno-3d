@@ -44,6 +44,7 @@ const SHORTCUTS: [string, string][] = [
   ['V / W / D / N / R / S', 'Select / Wall / Door / wiNdow / Room / Scale (2D)'],
   ['Cmd/Ctrl + Z', 'Undo · Shift to redo'],
   ['Cmd/Ctrl + D', 'Duplicate selected furniture'],
+  ['Cmd/Ctrl + C / V', 'Copy / paste furniture (pastes where you are looking)'],
   ['Arrow keys', 'Nudge furniture (Shift = fine)'],
   ['Shift-click', 'Multi-select furniture'],
   ['Delete', 'Remove selection · Esc to deselect'],

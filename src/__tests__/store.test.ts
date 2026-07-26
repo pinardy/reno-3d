@@ -24,6 +24,116 @@ describe('duplicate furniture', () => {
   })
 })
 
+describe('copy / paste furniture', () => {
+  it('copies the selected item and pastes an independent duplicate', () => {
+    const src = useStore.getState().project.items[0]
+    useStore.getState().select({ type: 'item', id: src.id })
+    expect(storeApi.copyItems()).toBe(1)
+    expect(useStore.getState().clipboard).toHaveLength(1)
+
+    const before = useStore.getState().project.items.length
+    expect(storeApi.pasteItems()).toBe(1)
+    const items = useStore.getState().project.items
+    expect(items.length).toBe(before + 1)
+
+    const pasted = items[items.length - 1]
+    expect(pasted.id).not.toBe(src.id)
+    expect(pasted.catalogId).toBe(src.catalogId)
+    expect(pasted.rotationY).toBe(src.rotationY)
+    expect(pasted.scale).toBe(src.scale)
+    expect(pasted.y).toBe(src.y)
+    // nested objects are cloned, not shared with the original or the clipboard
+    expect(pasted.material).not.toBe(src.material)
+    expect(pasted.material).toEqual(src.material)
+    expect(pasted.material).not.toBe(useStore.getState().clipboard[0].material)
+  })
+
+  it('leaves the pasted copy selected so it can be nudged', () => {
+    const src = useStore.getState().project.items[0]
+    useStore.getState().select({ type: 'item', id: src.id })
+    storeApi.copyItems()
+    storeApi.pasteItems()
+    const items = useStore.getState().project.items
+    const pastedId = items[items.length - 1].id
+    expect(useStore.getState().selectedItemIds).toEqual([pastedId])
+    expect(useStore.getState().selection.id).toBe(pastedId)
+  })
+
+  it('pastes as one undo step', () => {
+    const src = useStore.getState().project.items[0]
+    useStore.getState().select({ type: 'item', id: src.id })
+    storeApi.copyItems()
+    const before = useStore.getState().project.items.length
+    storeApi.pasteItems()
+    useStore.getState().undo()
+    expect(useStore.getState().project.items.length).toBe(before)
+  })
+
+  it('is a no-op with nothing selected or an empty clipboard', () => {
+    useStore.getState().clearSelection()
+    useStore.setState({ clipboard: [] })
+    expect(storeApi.copyItems()).toBe(0)
+    const before = useStore.getState().project.items.length
+    expect(storeApi.pasteItems()).toBe(0)
+    expect(useStore.getState().project.items.length).toBe(before)
+  })
+
+  it('copying does not consume the clipboard — paste repeats', () => {
+    const src = useStore.getState().project.items[0]
+    useStore.getState().select({ type: 'item', id: src.id })
+    storeApi.copyItems()
+    const before = useStore.getState().project.items.length
+    storeApi.pasteItems()
+    storeApi.pasteItems()
+    storeApi.pasteItems()
+    expect(useStore.getState().project.items.length).toBe(before + 3)
+    // repeated pastes step aside instead of stacking in one pile
+    const pasted = useStore.getState().project.items.slice(-3)
+    const spots = new Set(pasted.map((i) => `${i.position.x.toFixed(3)},${i.position.z.toFixed(3)}`))
+    expect(spots.size).toBe(3)
+  })
+
+  it('keeps a copied group’s arrangement when pasted', () => {
+    const [a, b] = useStore.getState().project.items
+    useStore.getState().select({ type: 'item', id: a.id })
+    useStore.getState().toggleItem(b.id)
+    expect(storeApi.copyItems()).toBe(2)
+
+    expect(storeApi.pasteItems()).toBe(2)
+    const pasted = useStore.getState().project.items.slice(-2)
+    // the offset between the two copies matches the offset between the originals
+    expect(pasted[1].position.x - pasted[0].position.x).toBeCloseTo(
+      b.position.x - a.position.x,
+      5,
+    )
+    expect(pasted[1].position.z - pasted[0].position.z).toBeCloseTo(
+      b.position.z - a.position.z,
+      5,
+    )
+  })
+
+  it('survives switching projects, so furniture can move between flats', () => {
+    const src = useStore.getState().project.items[0]
+    useStore.getState().select({ type: 'item', id: src.id })
+    storeApi.copyItems()
+
+    useStore.getState().newProject()
+    expect(useStore.getState().project.items).toHaveLength(0)
+    expect(useStore.getState().clipboard).toHaveLength(1)
+
+    expect(storeApi.pasteItems()).toBe(1)
+    expect(useStore.getState().project.items).toHaveLength(1)
+    expect(useStore.getState().project.items[0].catalogId).toBe(src.catalogId)
+  })
+
+  it('does not put the clipboard in the saved project', () => {
+    const src = useStore.getState().project.items[0]
+    useStore.getState().select({ type: 'item', id: src.id })
+    storeApi.copyItems()
+    expect(JSON.stringify(useStore.getState().project)).not.toContain('clipboard')
+  })
+})
+
 describe('multi-select', () => {
   it('toggles items and deletes/duplicates the group', () => {
     const [a, b, c] = useStore.getState().project.items.map((i) => i.id)

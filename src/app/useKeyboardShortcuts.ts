@@ -32,6 +32,18 @@ export function useKeyboardShortcuts() {
         return
       }
 
+      // copy / paste furniture. Only swallow the key when there was actually
+      // something to copy or paste, so Cmd/Ctrl+C still copies selected page text
+      // when no furniture is involved.
+      if (meta && e.key.toLowerCase() === 'c') {
+        if (storeApi.copyItems() > 0) e.preventDefault()
+        return
+      }
+      if (meta && e.key.toLowerCase() === 'v') {
+        if (storeApi.pasteItems() > 0) e.preventDefault()
+        return
+      }
+
       // arrow-key nudge for selected furniture (design view, orbit mode)
       if (
         !meta &&

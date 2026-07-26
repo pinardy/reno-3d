@@ -14,6 +14,8 @@ import {
 } from '../types/project'
 import { pointInPolygon } from '../geometry/vec'
 import { autoRoute, elbowOfRun, routeTrunking, pruneRuns } from '../features/aircon/aircon'
+import { clearForItems } from '../features/catalog/placement'
+import { getFocusPoint } from '../features/scene/focus'
 
 export type EditorMode = 'trace' | 'design'
 export type TraceTool = 'select' | 'scale' | 'wall' | 'door' | 'window' | 'room'
@@ -45,6 +47,10 @@ interface AppState {
   clearSelection: () => void
   selectedItemIds: string[] // multi-selection of furniture
   toggleItem: (id: string) => void // shift-click add/remove
+  // Copy/paste buffer for furniture. Deliberately not part of `project`: it is
+  // session scratch, so it neither autosaves nor lands in a share link, and it
+  // survives switching projects (paste a sofa from one flat into another).
+  clipboard: Omit<Item, 'id'>[]
 
   // ----- project-level -----
   loadProject: (p: Project) => void
@@ -77,6 +83,7 @@ export const useStore = create<AppState>((set, get) => ({
   tool: 'select',
   selection: { type: null, id: null },
   selectedItemIds: [],
+  clipboard: [],
   cameraMode: 'orbit',
   saveState: 'idle',
   helpOpen: false,
@@ -338,13 +345,58 @@ export const storeApi = {
     })
   },
 
+  // ---- clipboard ----
+  /** Snapshot the selected furniture into the clipboard. Returns how many. */
+  copyItems(): number {
+    const st = useStore.getState()
+    const items = targetItemIds()
+      .map((id) => st.project.items.find((i) => i.id === id))
+      .filter((i): i is Item => !!i)
+    if (!items.length) return 0
+    useStore.setState({ clipboard: items.map(snapshotItem) })
+    return items.length
+  },
+  /**
+   * Drop the clipboard into the scene and leave the copies selected, so they can
+   * be nudged straight away. Returns how many were pasted.
+   */
+  pasteItems(): number {
+    const st = useStore.getState()
+    const clip = st.clipboard
+    if (!clip.length) return 0
+
+    // Paste where the camera is looking, so you can copy a chair in one room,
+    // orbit to another and paste it there. With no 3D view live (tracing in 2D)
+    // there is nothing to aim at, so fall back to the small offset Duplicate uses.
+    const cx = clip.reduce((s, it) => s + it.position.x, 0) / clip.length
+    const cz = clip.reduce((s, it) => s + it.position.z, 0) / clip.length
+    const base = getFocusPoint() ?? { x: cx + PASTE_OFFSET, z: cz + PASTE_OFFSET }
+
+    // Offsets from the group's centre, so a copied arrangement keeps its layout.
+    // Both paths get the declutter: the fallback anchor is derived from the
+    // clipboard, which never moves, so without it every paste in 2D would land on
+    // the exact same spot and bury the previous one.
+    const offsets = clip.map((it) => ({
+      x: it.position.x - cx,
+      z: it.position.z - cz,
+    }))
+    const anchor = clearForItems(
+      base,
+      clip.map((item, i) => ({ item, offset: offsets[i] })),
+      { items: st.project.items, walls: st.project.walls, rooms: st.project.rooms },
+    )
+
+    return storeApi.addItems(
+      clip.map((it, i) => ({
+        ...snapshotItem(it),
+        position: { x: anchor.x + offsets[i].x, z: anchor.z + offsets[i].z },
+      })),
+    ).length
+  },
+
   duplicateSelectedItem() {
     const st = useStore.getState()
-    const ids = st.selectedItemIds.length
-      ? st.selectedItemIds
-      : st.selection.type === 'item' && st.selection.id
-        ? [st.selection.id]
-        : []
+    const ids = targetItemIds()
     if (!ids.length) return
     const newIds: string[] = []
     st.commit((p) => {
@@ -417,4 +469,40 @@ export const storeApi = {
 function dropOrphanRuns(p: Project) {
   if (!p.aircon) return
   p.aircon.runs = pruneRuns(p)
+}
+
+/** How far a pasted copy sits from its original when there's no camera to aim at. */
+const PASTE_OFFSET = 0.4
+
+/**
+ * The furniture an action applies to: the multi-selection if there is one, else
+ * the single selected item. Copy, duplicate and the arrow-key nudge all need the
+ * same answer.
+ */
+function targetItemIds(): string[] {
+  const st = useStore.getState()
+  if (st.selectedItemIds.length) return st.selectedItemIds
+  return st.selection.type === 'item' && st.selection.id ? [st.selection.id] : []
+}
+
+/**
+ * A detached copy of an item, without its id. Nested objects are cloned so a
+ * pasted copy never shares a material or params object with its original (or with
+ * the clipboard, which would let a later edit mutate the buffer). Listing the
+ * fields out means a new required field on Item fails to compile here rather than
+ * being silently dropped from every copy.
+ */
+function snapshotItem(it: Omit<Item, 'id'>): Omit<Item, 'id'> {
+  return {
+    catalogId: it.catalogId,
+    kind: it.kind,
+    name: it.name,
+    position: { ...it.position },
+    y: it.y,
+    rotationY: it.rotationY,
+    scale: it.scale,
+    material: { ...it.material },
+    params: it.params ? { ...it.params } : undefined,
+    modelUrl: it.modelUrl,
+  }
 }
