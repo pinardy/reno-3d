@@ -1,4 +1,4 @@
-import { X, Upload, Ruler, Minus, Box, Package, Keyboard, PencilRuler, AirVent } from 'lucide-react'
+import { X, Upload, Ruler, Minus, Box, Package, Keyboard, PencilRuler, AirVent, GitCompare } from 'lucide-react'
 import { useStore } from '../store/store'
 import { useIsCoarsePointer } from '../lib/device'
 
@@ -37,6 +37,11 @@ const STEPS = [
     icon: <AirVent size={18} />,
     title: '7 · Plan the aircon',
     body: 'Add fan coils and a condenser from the Aircon category, then Route trunking to see where the casing runs, how long the pipes are, and whether each room is sized right.',
+  },
+  {
+    icon: <GitCompare size={18} />,
+    title: '8 · Check the numbers',
+    body: 'The right panel totals paint, tile and skirting off the plan. Torn between two layouts? Duplicate as variant in the Projects menu, then Compare puts them side by side.',
   },
 ]
 

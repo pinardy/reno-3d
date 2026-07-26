@@ -75,6 +75,12 @@ New `Project` fields must be **optional**, and `migrateProject`
 (`features/persistence/io.ts`) normalizes anything old or partial on load. Every
 entry point funnels through it: IndexedDB restore, `.json` import, and share links.
 Don't add non-optional fields — saved projects and shared links predate them.
+`views`, `aircon` and `variantOf` are all optional for this reason.
+
+Also check `stripHeavy` in `features/persistence/share.ts` when adding a field: a
+share link crosses to another machine, so anything referring to local state (an
+imported `.glb` blob URL, a `variantOf` pointing at a project id that only exists
+in the sender's IndexedDB) has to be dropped rather than shipped dangling.
 
 ### Persistence and sharing
 
@@ -87,10 +93,21 @@ Don't add non-optional fields — saved projects and shared links predate them.
 
 ### Feature folders: pure logic + a panel
 
-`features/checks/`, `features/aircon/` and `features/elevation/` each pair pure
-`.ts` analysis with a `*Panel.tsx`. Keep the analysis pure and side-effect free —
-that's what makes it unit-testable and cheap to recompute under `useMemo` on every
-project change.
+`features/checks/`, `features/aircon/`, `features/elevation/`, `features/takeoff/`
+and `features/variants/` each pair pure `.ts` analysis with a `*Panel.tsx` (or
+modal). Keep the analysis pure and side-effect free — that's what makes it
+unit-testable and cheap to recompute under `useMemo` on every project change.
+
+Two of these sample geometry rather than solving it exactly, which is a deliberate
+tradeoff to know about before "fixing" a number that looks slightly off:
+
+- **Takeoff** walks each wall in 5 cm steps and probes 25 cm off each face for the
+  room behind it. That's what lets one wall bordering three rooms be split between
+  them, and what makes areas follow the **inner face** perimeter (a 4×3 m box of
+  100 mm walls gives 13.6 m of wall, not 14 m — the centreline would double-count
+  every corner). Openings subtract their own height at the offsets they cover, so a
+  window leaves wall above and below.
+- **Trunking routing** scores candidate elbows by sampling along the route.
 
 **Panels mount in two places.** `app/RightPanel.tsx` (desktop) and
 `app/MobilePanels.tsx` (below 900px) both compose the same panel list. Adding a
@@ -163,5 +180,16 @@ flag that blocks hacking, the catalog has an HDB fixtures category (household
 shelter, aircon ledge, bay window), aircon is modelled as a Singapore "System N"
 (one condenser driving N fan coils) with BTU sizing at ~650 BTU/m², and carpentry
 elevations report a **foot run**, which is the unit Singapore carpenters quote in.
+The takeoff counts bathroom and kitchen walls as **tile rather than paint**, because
+that's how an HDB flat is actually finished and how the two line items are quoted —
+`WET_ROOM` in `takeoff.ts` is a separate list from the aircon module's
+`UNCONDITIONED_NAME` on purpose (a store room is unconditioned but painted).
 `app/HdbRulesPanel.tsx` is general guidance to confirm with HDB — deliberately
 hedged, not legal advice. Keep that hedging when touching it.
+
+The templates in `features/sample/templates.ts` are named "(approx)" and mean it.
+`FlatBuilder`'s room sets **leave a piece out rather than draw it overlapping** when
+it won't fit with its clearances — the 2-room Flexi has no dining table for exactly
+this reason. `templates.test.ts` asserts every shipped layout passes `findIssues`
+with zero warnings, so a new template with a clash fails the suite; fix the layout,
+don't relax the test.

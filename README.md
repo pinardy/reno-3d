@@ -13,8 +13,9 @@ npm install
 npm run dev        # http://localhost:5173
 ```
 
-Start from an **HDB template** (3 / 4 / 5-room) or **✨ Sample home** to explore a
-furnished flat immediately, or follow the workflow below with your own floor plan.
+Start from an **HDB template** (2-room Flexi, 3 / 4 / 5-room, or the 2021+ 4-room
+with the household shelter) or **✨ Sample home** to explore a furnished flat
+immediately, or follow the workflow below with your own floor plan.
 
 Other scripts: `npm run build` (production build), `npm run preview`.
 
@@ -63,12 +64,25 @@ Other scripts: `npm run build` (production build), `npm run preview`.
     for west-facing rooms), pipe-run lengths, and checks for undersized or oversized
     units, too many fan coils for the condenser, over-long pipe runs, a condenser off
     the ledge, and a fan coil blowing straight onto a bed.
-12. **Budget** — the right panel shows per-room + total floor area with a rough reno
+12. **Paint, tile & skirting** — quantities straight off the geometry: paintable wall
+    area net of doors and windows (bathroom and kitchen walls counted as tile, not
+    paint), ceiling area, litres and 5 L pails at your chosen number of coats, floor
+    and wall tile in pieces for a 300 × 300 up to 800 × 800 tile with an editable
+    wastage allowance, and the skirting run with doorways left out. Walls are
+    measured face by face, so one shared between two rooms is split between them.
+13. **Budget** — the right panel shows per-room + total floor area with a rough reno
     estimate, plus a **furniture total** and a **shopping-list CSV export** (ballpark
     per-item prices you can replace with real quotes).
-13. **Save, share & export** — autosaves to your browser (IndexedDB). From the top
-    bar: a printable **PDF spec sheet** (plan + render + carpentry elevations + aircon
-    schedule + budget), a **top-down floor plan PNG** (walls, door/window symbols,
+14. **Compare layouts** — nobody settles a floor plan first time. **Duplicate as
+    variant** (branch icon in the Projects menu) copies a layout as an alternative to
+    weigh against the original and opens it ready to rearrange; **Compare** puts the
+    family side by side on floor area, reno estimate, furniture, carpentry run, paint
+    and tile area, aircon and the number of layout warnings, highlighting the better
+    value in each row. You can widen it to every saved home.
+15. **Save, share & export** — autosaves to your browser (IndexedDB). From the top
+    bar: a printable **PDF spec sheet** (plan + render + carpentry elevations + paint
+    and tile takeoff + aircon schedule + budget), a **top-down floor plan PNG** (walls,
+    door/window symbols,
     room areas, furniture footprints, dashed aircon trunking, dimensions + scale bar),
     **glTF/.glb** export of the 3D model, a **3D screenshot** (camera icon, in 3D
     view), a **share link** (design without the background image), and `.json`
@@ -130,6 +144,13 @@ into another.
   items, so they inherit placement, wall snapping and pricing. Trunking is a separate
   polyline per run on the project; routing picks whichever right-angled elbow keeps
   more of the path within 0.45 m of a wall, sampled along the route.
+- **Takeoff** (`src/features/takeoff/`): every wall is walked in 5 cm steps and each
+  face attributed to the room behind it, so a wall bordering three rooms is split
+  between them and an exterior face counts once. Openings subtract their own height
+  at the offsets they cover, so a window still leaves wall above and below it.
+- **Variants** (`src/features/variants/`): a project's optional `variantOf` points at
+  the root of a family of alternatives, kept flat so a variant of a variant shares
+  the same root. Comparison is a pure function over each project's metrics.
 - **Materials** (`src/features/materials/`): procedural canvas textures (wood, tile,
   marble, carpet, …) so nothing is fetched over the network.
 - **Persistence** (`src/features/persistence/`): debounced autosave to IndexedDB
