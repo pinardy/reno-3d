@@ -3,6 +3,7 @@ import { useStore } from '../../store/store'
 import type { Room } from '../../types/project'
 import { buildFloorGeometry } from '../../geometry/floor'
 import { SurfaceMaterial } from '../materials/SurfaceMaterial'
+import { isPanModifierHeld } from './panModifier'
 
 export const RoomFloor = memo(function RoomFloor({
   room,
@@ -28,6 +29,7 @@ export const RoomFloor = memo(function RoomFloor({
         receiveShadow
         onClick={(e) => {
           e.stopPropagation()
+          if (isPanModifierHeld()) return // space-drag is a camera pan, not a pick
           select({ type: 'room', id: room.id })
         }}
       >

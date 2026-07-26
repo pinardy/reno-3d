@@ -4,6 +4,7 @@ import type { Wall } from '../../types/project'
 import { buildWallPieces } from '../../geometry/walls'
 import { SurfaceMaterial } from '../materials/SurfaceMaterial'
 import { DOLLHOUSE_H } from './constants'
+import { isPanModifierHeld } from './panModifier'
 
 // Memoized so an unrelated store change (e.g. dragging furniture) doesn't
 // re-render the walls. It still re-renders when walls/openings/selection change
@@ -31,6 +32,7 @@ export const WallsGroup = memo(function WallsGroup({
             key={wall.id}
             onClick={(e) => {
               e.stopPropagation()
+              if (isPanModifierHeld()) return // space-drag is a camera pan, not a pick
               select({ type: 'wall', id: wall.id })
             }}
           >

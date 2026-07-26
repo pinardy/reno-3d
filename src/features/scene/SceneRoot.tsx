@@ -7,6 +7,7 @@ import { useStore } from '../../store/store'
 import type { Vec2 } from '../../types/project'
 import { registerCapturer, registerHomeExporter } from './screenshot'
 import { registerFocusPicker } from './focus'
+import { usePanModifier, isPanModifierHeld } from './panModifier'
 import { DimensionLabels } from './DimensionLabels'
 import { OpeningsGroup } from './Openings'
 import { MeasureTool } from './MeasureTool'
@@ -50,6 +51,8 @@ export function SceneRoot({
   const homeRef = useRef<THREE.Group>(null)
   // third-party OrbitControls ref (typed `any` at this boundary only)
   const orbitRef = useRef<any>(null)
+
+  usePanModifier(orbitRef, cameraMode === 'orbit')
 
   // register the ground picker + screenshot capturer + glTF exporter
   useEffect(() => {
@@ -158,7 +161,7 @@ export function SceneRoot({
           e.stopPropagation()
           // a click that ends a drag (orbiting the camera, or dropping an item
           // that snapped away from the cursor) is not a deliberate deselect
-          if (e.delta > 4) return
+          if (e.delta > 4 || isPanModifierHeld()) return
           useStore.getState().clearSelection()
         }}
       >

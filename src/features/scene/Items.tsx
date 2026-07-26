@@ -6,6 +6,7 @@ import { catalogById } from '../catalog/catalog'
 import { FurnitureModel } from '../catalog/FurnitureModel'
 import { num } from '../../lib/params'
 import { snapCabinetToWall } from './collision'
+import { isPanModifierHeld } from './panModifier'
 
 interface ItemDrag {
   ids: string[]
@@ -128,6 +129,8 @@ export function ItemsGroup({
   const onItemDown = useCallback(
     (e: ThreeEvent<PointerEvent>, item: Item) => {
       if (!enabled) return
+      // space-drag pans the camera, so let it through instead of grabbing the item
+      if (isPanModifierHeld()) return
       e.stopPropagation()
       const st = useStore.getState()
 

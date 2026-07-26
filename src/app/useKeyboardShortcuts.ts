@@ -1,11 +1,6 @@
 import { useEffect } from 'react'
 import { useStore, storeApi } from '../store/store'
-
-function isTypingTarget(el: EventTarget | null): boolean {
-  if (!(el instanceof HTMLElement)) return false
-  const tag = el.tagName
-  return tag === 'INPUT' || tag === 'TEXTAREA' || el.isContentEditable
-}
+import { isTypingTarget } from '../lib/dom'
 
 export function useKeyboardShortcuts() {
   useEffect(() => {

@@ -37,6 +37,7 @@ const SHORTCUTS: [string, string][] = [
   ['Shift-click', 'Multi-select furniture'],
   ['Delete', 'Remove selection · Esc to deselect'],
   ['Scroll / Space-drag', 'Zoom / pan the 2D view'],
+  ['Space-drag', 'Pan the 3D view (left-drag orbits)'],
 ]
 
 export function HelpPanel() {
