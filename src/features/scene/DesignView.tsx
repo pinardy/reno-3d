@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { Move, RotateCw, Info, Ruler, Map, Building2, PencilRuler, Sun, SquareStack, Sparkles } from 'lucide-react'
 import { SceneRoot, type GroundPicker } from './SceneRoot'
 import { Compass } from './Compass'
+import { ViewsControl } from './ViewsControl'
 import { useStore, storeApi } from '../../store/store'
 import { catalogById, newItemFromCatalog } from '../catalog/catalog'
 import { makeSampleProject } from '../sample/sample'
@@ -168,6 +169,7 @@ export function DesignView() {
           />
         </div>
         <Compass />
+        {cameraMode === 'orbit' && <ViewsControl />}
       </div>
 
       {/* hints */}

@@ -3,7 +3,11 @@ import { Download } from 'lucide-react'
 import { useStore } from '../../store/store'
 import { polygonArea } from '../../geometry/vec'
 import { Section } from '../../app/ui'
-import { furnitureTotal, exportShoppingListCSV } from '../persistence/shoppingList'
+import {
+  furnitureTotal,
+  exportShoppingListCSV,
+  shoppingListByRoom,
+} from '../persistence/shoppingList'
 
 const RATE_KEY = 'reno:costRatePerM2'
 const DEFAULT_RATE = 1500 // rough S$/m² renovation estimate
@@ -22,6 +26,7 @@ export function ProjectSummary() {
   const areas = rooms.map((r) => ({ name: r.name, area: Math.abs(polygonArea(r.loop)) }))
   const total = areas.reduce((s, a) => s + a.area, 0)
   const furniture = furnitureTotal(project)
+  const byRoom = shoppingListByRoom(project)
 
   function updateRate(v: number) {
     setRate(v)
@@ -91,6 +96,19 @@ export function ProjectSummary() {
               S${Math.round(furniture).toLocaleString()}
             </span>
           </div>
+          {/* per-room spend: how you actually budget a renovation */}
+          {byRoom.length > 1 && (
+            <div className="mt-2 space-y-0.5">
+              {byRoom.map((g) => (
+                <div key={g.room} className="flex items-center justify-between gap-2 text-[11px]">
+                  <span className="min-w-0 truncate text-neutral-400">{g.room}</span>
+                  <span className="shrink-0 tabular-nums text-neutral-400">
+                    S${Math.round(g.total).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
           <button
             type="button"
             onClick={() => exportShoppingListCSV(project)}
@@ -99,7 +117,8 @@ export function ProjectSummary() {
             <Download size={13} /> Export shopping list (CSV)
           </button>
           <p className="mt-1 text-[10px] leading-tight text-neutral-500">
-            Ballpark prices per item — edit the CSV with your real quotes.
+            Ballpark prices per item, grouped by room in the CSV — edit it with
+            your real quotes.
           </p>
         </>
       )}

@@ -480,7 +480,7 @@ export const CATALOG: CatalogEntry[] = [
     category: 'Living',
     size: { w: 0.3, d: 0.3, h: 0.5 },
     material: makeMaterial({ color: '#e6ddc9', roughness: 0.6 }),
-    baseY: 0.4,
+    baseY: 0.5, // nightstand height; at 0.4 it sat inside the nightstand
   },
 
   // ===== Bedroom (more) =====

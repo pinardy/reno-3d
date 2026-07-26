@@ -214,6 +214,18 @@ export const storeApi = {
     })
     return id
   },
+  addView(name: string, pose: { pos: [number, number, number]; target: [number, number, number] }) {
+    const id = nanoid()
+    useStore.getState().commit((p) => {
+      p.views = [...(p.views ?? []), { id, name, ...pose }]
+    })
+    return id
+  },
+  removeView(id: string) {
+    useStore.getState().commit((p) => {
+      p.views = (p.views ?? []).filter((v) => v.id !== id)
+    })
+  },
   addItem(it: Omit<Item, 'id'>): string {
     const id = nanoid()
     useStore.getState().commit((p) => {

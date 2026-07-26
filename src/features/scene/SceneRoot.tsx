@@ -7,6 +7,7 @@ import { useStore } from '../../store/store'
 import type { Vec2 } from '../../types/project'
 import { registerCapturer, registerHomeExporter } from './screenshot'
 import { registerFocusPicker } from './focus'
+import { registerCameraControl } from './cameraBridge'
 import { usePanModifier, isPanModifierHeld } from './panModifier'
 import { DimensionLabels } from './DimensionLabels'
 import { OpeningsGroup } from './Openings'
@@ -86,11 +87,30 @@ export function SceneRoot({
       )
     })
     registerFocusPicker(() => focusPoint())
+    registerCameraControl({
+      get: () => {
+        const t = orbitRef.current?.target as THREE.Vector3 | undefined
+        if (!t) return null
+        return {
+          pos: [camera.position.x, camera.position.y, camera.position.z],
+          target: [t.x, t.y, t.z],
+        }
+      },
+      apply: ({ pos, target }) => {
+        camera.position.set(pos[0], pos[1], pos[2])
+        const c = orbitRef.current
+        if (c) {
+          c.target.set(target[0], target[1], target[2])
+          c.update()
+        }
+      },
+    })
     return () => {
       pickerRef.current = null
       registerCapturer(null)
       registerHomeExporter(null)
       registerFocusPicker(null)
+      registerCameraControl(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

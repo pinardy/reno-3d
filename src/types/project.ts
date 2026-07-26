@@ -119,6 +119,15 @@ export interface Project {
   wallHeight: number // default wall height for new walls (metres)
   wallThickness: number // default wall thickness (metres)
   orientationDeg: number // compass bearing that screen-up / plan-up faces (0 = North up)
+  views?: SavedView[] // optional so older saved projects load unchanged
+}
+
+/** A parked camera position, so a layout can be shown from the same angle twice. */
+export interface SavedView {
+  id: string
+  name: string
+  pos: [number, number, number]
+  target: [number, number, number]
 }
 
 // ---- defaults -------------------------------------------------------------

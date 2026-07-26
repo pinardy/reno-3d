@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { useThree, type ThreeEvent } from '@react-three/fiber'
 import { useStore } from '../../store/store'
 import type { Item, Project, Vec2 } from '../../types/project'
@@ -7,6 +7,7 @@ import { FurnitureModel } from '../catalog/FurnitureModel'
 import { num } from '../../lib/params'
 import { snapCabinetToWall } from './collision'
 import { isPanModifierHeld } from './panModifier'
+import { alignToItems, snapAngle, type Guide } from './alignment'
 
 interface ItemDrag {
   ids: string[]
@@ -33,6 +34,7 @@ export function ItemsGroup({
   const selectedItemIds = useStore((s) => s.selectedItemIds)
   const { gl } = useThree()
   const dragRef = useRef<ItemDrag | null>(null)
+  const [guides, setGuides] = useState<Guide[]>([])
   const rotRef = useRef<{ id: string; startAngle: number; itemStart: number; pre: Project } | null>(null)
 
   useEffect(() => {
@@ -53,6 +55,13 @@ export function ItemsGroup({
           if (e.shiftKey) {
             nx = Math.round(nx / 0.1) * 0.1
             nz = Math.round(nz / 0.1) * 0.1
+            setGuides([])
+          } else {
+            // line up with other furniture unless the grid snap is asked for
+            const al = alignToItems({ x: nx, z: nz }, id, useStore.getState().project.items)
+            nx = al.point.x
+            nz = al.point.z
+            setGuides(al.guides)
           }
           const dItem = useStore.getState().project.items.find((i) => i.id === id)
           // kitchen cabinets snap their back against a nearby wall
@@ -99,9 +108,13 @@ export function ItemsGroup({
         const it0 = useStore.getState().project.items.find((i) => i.id === rot.id)
         if (!it0) return
         const ang = Math.atan2(p.z - it0.position.z, p.x - it0.position.x)
+        const next = rot.itemStart + (ang - rot.startAngle)
+        // Shift snaps rotation to 15 degrees, the same way it snaps position to
+        // the grid — makes square-to-the-room placement reachable by hand.
+        const snappedAngle = e.shiftKey ? snapAngle(next) : next
         useStore.getState().update((proj) => {
           const it = proj.items.find((i) => i.id === rot.id)
-          if (it) it.rotationY = rot.itemStart + (ang - rot.startAngle)
+          if (it) it.rotationY = snappedAngle
         })
       }
     }
@@ -117,6 +130,7 @@ export function ItemsGroup({
         rotRef.current = null
       }
       if (orbitRef.current) orbitRef.current.enabled = enabled
+      setGuides([])
     }
     el.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)
@@ -190,6 +204,9 @@ export function ItemsGroup({
 
   return (
     <group>
+      {guides.map((g, i) => (
+        <AlignGuide key={`${g.axis}-${i}`} guide={g} />
+      ))}
       {items.map((item) => (
         <ItemView
           key={item.id}
@@ -229,6 +246,27 @@ const ItemView = memo(function ItemView({
     </group>
   )
 })
+
+/** Thin line on the floor showing what the dragged item just lined up with. */
+function AlignGuide({ guide }: { guide: Guide }) {
+  const mid = (guide.from + guide.to) / 2
+  const len = Math.max(0.5, guide.to - guide.from)
+  const horizontal = guide.axis === 'z' // a matched z runs along x
+  return (
+    <mesh
+      position={[
+        horizontal ? mid : guide.at,
+        0.015,
+        horizontal ? guide.at : mid,
+      ]}
+      rotation-x={-Math.PI / 2}
+      rotation-z={horizontal ? 0 : Math.PI / 2}
+    >
+      <planeGeometry args={[len, 0.015]} />
+      <meshBasicMaterial color="#ff9f43" transparent opacity={0.9} />
+    </mesh>
+  )
+}
 
 function SelectionRing() {
   const r = 0.6
