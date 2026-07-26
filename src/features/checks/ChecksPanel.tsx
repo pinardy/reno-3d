@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
-import { AlertTriangle, CheckCircle2, Sun, Sunrise, Sunset } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Sun, Sunrise, Sunset, ShieldAlert } from 'lucide-react'
 import { useStore } from '../../store/store'
 import { Section } from '../../app/ui'
-import { findIssues, type IssueKind } from './clearance'
+import { findIssues, type Issue, type IssueKind } from './clearance'
 import { roomSunExposure } from './sun'
 
 const LABEL: Record<IssueKind, string> = {
@@ -10,6 +10,8 @@ const LABEL: Record<IssueKind, string> = {
   'in-wall': 'In a wall',
   'door-blocked': 'Door',
   access: 'Access',
+  'no-entry': "Won't fit",
+  'narrow-door': 'Narrow door',
 }
 
 export function ChecksPanel() {
@@ -19,6 +21,17 @@ export function ChecksPanel() {
   // both are pure passes over the project; recompute only when it actually changes
   const issues = useMemo(() => findIssues(project), [project])
   const sun = useMemo(() => roomSunExposure(project), [project])
+  const wallCount = project.walls.length
+  const structuralCount = useMemo(
+    () => project.walls.filter((w) => w.structural).length,
+    [project.walls],
+  )
+
+  // an issue points at either an item or an opening
+  const selectIssue = (iss: Issue) =>
+    iss.openingId
+      ? select({ type: 'opening', id: iss.openingId })
+      : select({ type: 'item', id: iss.itemId })
 
   return (
     <>
@@ -32,9 +45,9 @@ export function ChecksPanel() {
           <div className="space-y-1">
             {issues.map((iss, i) => (
               <button
-                key={`${iss.kind}-${iss.itemId}-${i}`}
+                key={`${iss.kind}-${iss.itemId}-${iss.openingId ?? ''}-${i}`}
                 type="button"
-                onClick={() => select({ type: 'item', id: iss.itemId })}
+                onClick={() => selectIssue(iss)}
                 className="flex w-full items-start gap-2 rounded px-1.5 py-1 text-left text-[11px] leading-snug text-neutral-300 hover:bg-panel2"
               >
                 <AlertTriangle size={13} className="mt-0.5 shrink-0 text-amber-400" />
@@ -49,6 +62,29 @@ export function ChecksPanel() {
               door swings and the space needed to open tall units.
             </p>
           </div>
+        )}
+      </Section>
+
+      <Section title="Structural walls">
+        {structuralCount > 0 ? (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 text-xs text-neutral-300">
+              <ShieldAlert size={15} className="shrink-0 text-amber-400" />
+              {structuralCount} of {wallCount} walls marked load-bearing
+            </div>
+            <p className="text-[10px] leading-relaxed text-neutral-500">
+              Load-bearing walls and the household shelter can't be hacked, and
+              their openings can't be enlarged. Verify with HDB or your contractor
+              before removing any wall.
+            </p>
+          </div>
+        ) : (
+          <p className="text-[11px] leading-relaxed text-neutral-500">
+            No walls marked structural. Select a wall and tick{' '}
+            <span className="text-neutral-300">Structural</span> for the ones that
+            are load-bearing — usually the flat's perimeter and the household
+            shelter — so the model warns before you hack them.
+          </p>
         )}
       </Section>
 

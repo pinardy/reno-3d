@@ -19,14 +19,40 @@ import { catalogById } from '../catalog/catalog'
 // between any two items) flag every sofa-and-coffee-table pair. Better to report
 // nothing than to train you to ignore warnings.
 
-export type IssueKind = 'overlap' | 'in-wall' | 'door-blocked' | 'access'
+export type IssueKind =
+  | 'overlap'
+  | 'in-wall'
+  | 'door-blocked'
+  | 'access'
+  | 'no-entry'
+  | 'narrow-door'
 
 export interface Issue {
   kind: IssueKind
   itemId: string // the item to select when the user clicks the issue
   otherId?: string
+  openingId?: string // set instead of itemId when the issue is about an opening
   message: string
 }
+
+// Big pieces are delivered assembled, so if even their *smallest* dimension can't
+// pass the widest door they physically can't be brought in. Movers tilt a piece
+// onto its narrowest profile, so height counts as much as footprint — a queen bed
+// goes through a 0.9m door on its side. Comparing the smallest of all three
+// dimensions keeps this quiet on normal furniture and only fires on the genuinely
+// impossible, which is the whole point of a warning. Cabinets/sinks/hoods are
+// built or installed in place, and soft/small things bend, so neither is checked.
+// Beds, wardrobes, tables and shelving flat-pack or unbolt, so they're excluded
+// however big they model — only pieces that arrive as one rigid lump are checked.
+const DELIVERED_RIGID: ReadonlySet<ItemKind> = new Set<ItemKind>([
+  'sofa',
+  'appliance',
+  'bathtub',
+  'piano',
+])
+const DOOR_FIT_SLACK = 0.02
+// Below this a doorway is tight for moving furniture (HDB doors are ~0.85m).
+const TIGHT_DOOR = 0.7
 
 /** Free space each kind needs in front of it to be usable, in metres. */
 const ACCESS_CLEARANCE: Partial<Record<ItemKind, number>> = {
@@ -231,6 +257,39 @@ export function findIssues(project: Project): Issue[] {
           message: `${p.item.name} blocks a door`,
         })
       }
+    }
+  }
+
+  // won't fit through the door: a delivered-assembled piece whose smaller
+  // footprint side is wider than the widest door in the home
+  const doorWidths = project.openings
+    .filter((o) => o.type === 'door' || o.type === 'sliding')
+    .map((o) => o.width)
+  if (doorWidths.length) {
+    const widest = Math.max(...doorWidths)
+    for (const p of active) {
+      if (!DELIVERED_RIGID.has(p.item.kind)) continue
+      const minDim = Math.min(p.rect.w, p.rect.d, p.y1 - p.y0)
+      if (minDim > widest + DOOR_FIT_SLACK) {
+        issues.push({
+          kind: 'no-entry',
+          itemId: p.item.id,
+          message: `${p.item.name} may not fit through the door (${minDim.toFixed(2)}m at its narrowest, widest door ${widest.toFixed(2)}m)`,
+        })
+      }
+    }
+  }
+
+  // tight doorways — awkward to move furniture (or a wheelchair) through
+  for (const o of project.openings) {
+    if (o.type !== 'door' && o.type !== 'sliding') continue
+    if (o.width < TIGHT_DOOR) {
+      issues.push({
+        kind: 'narrow-door',
+        itemId: '',
+        openingId: o.id,
+        message: `Doorway is only ${o.width.toFixed(2)}m wide — tight for moving furniture`,
+      })
     }
   }
 

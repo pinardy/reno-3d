@@ -344,3 +344,44 @@ describe('shopping list by room', () => {
     expect(sum).toBe(furnitureTotal(p))
   })
 })
+
+describe('circulation checks', () => {
+  const door = (width: number, type: 'door' | 'sliding' = 'door') => ({
+    id: `op-${width}`,
+    wallId: 'w',
+    type,
+    offset: 1,
+    width,
+    height: 2.05,
+    sillHeight: 0,
+  })
+
+  it('flags a tight doorway and points at the opening', () => {
+    const p = projectWith([], { openings: [door(0.6)] })
+    const narrow = findIssues(p).filter((i) => i.kind === 'narrow-door')
+    expect(narrow).toHaveLength(1)
+    expect(narrow[0].openingId).toBe('op-0.6')
+  })
+
+  it('leaves a normal doorway alone', () => {
+    const p = projectWith([], { openings: [door(0.9)] })
+    expect(findIssues(p).some((i) => i.kind === 'narrow-door')).toBe(false)
+  })
+
+  it('flags a rigid piece too big for any door', () => {
+    const big = { ...itemOf('sofa-3', 5, 5), scale: 1.4 } // smallest dim ~1.1m
+    const p = projectWith([big], { openings: [door(0.9)] })
+    expect(findIssues(p).some((i) => i.kind === 'no-entry')).toBe(true)
+  })
+
+  it('passes a normal sofa through a normal door', () => {
+    const p = projectWith([itemOf('sofa-3', 5, 5)], { openings: [door(0.9)] })
+    expect(findIssues(p).some((i) => i.kind === 'no-entry')).toBe(false)
+  })
+
+  it('ignores flat-pack furniture however large — a bed disassembles', () => {
+    const bed = { ...itemOf('bed-queen', 5, 5), scale: 1.6 }
+    const p = projectWith([bed], { openings: [door(0.9)] })
+    expect(findIssues(p).some((i) => i.kind === 'no-entry')).toBe(false)
+  })
+})
