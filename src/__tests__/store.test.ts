@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useStore, storeApi } from '../store/store'
 import { makeSampleProject } from '../features/sample/sample'
+import { roomSunExposure } from '../features/checks/sun'
 
 beforeEach(() => {
   useStore.getState().loadProject(makeSampleProject())
@@ -21,6 +22,44 @@ describe('duplicate furniture', () => {
     expect(dup.material).not.toBe(orig.material)
     useStore.getState().undo()
     expect(useStore.getState().project.items.length).toBe(before)
+  })
+})
+
+describe('plan orientation', () => {
+  // Regression: this was written as `update((p) => (p.orientationDeg = ...))`, a
+  // parenthesised assignment, so the recipe returned the assigned number as well as
+  // mutating the draft. Immer rejects that, so the setter threw and the compass did
+  // nothing at all — taking the sun exposure, the aircon west-sun uplift and the
+  // exported north arrow down with it. Anything reachable from a click deserves a
+  // test that actually calls it.
+  it('sets a bearing without tripping immer', () => {
+    expect(() => storeApi.setOrientation(90)).not.toThrow()
+    expect(useStore.getState().project.orientationDeg).toBe(90)
+  })
+
+  it('normalises into 0..359', () => {
+    storeApi.setOrientation(450)
+    expect(useStore.getState().project.orientationDeg).toBe(90)
+    storeApi.setOrientation(-90)
+    expect(useStore.getState().project.orientationDeg).toBe(270)
+    storeApi.setOrientation(360)
+    expect(useStore.getState().project.orientationDeg).toBe(0)
+  })
+
+  it('changes what the sun pass reports', () => {
+    storeApi.setOrientation(0)
+    const north = roomSunExposure(useStore.getState().project)
+    storeApi.setOrientation(90)
+    const east = roomSunExposure(useStore.getState().project)
+    // same windows, rotated plan — the facings must differ
+    expect(north.length).toBeGreaterThan(0)
+    expect(east.map((r) => r.facings.join())).not.toEqual(north.map((r) => r.facings.join()))
+  })
+
+  it('stays transient, the way the slider expects', () => {
+    const steps = useStore.getState().past.length
+    for (const d of [10, 20, 30, 40]) storeApi.setOrientation(d)
+    expect(useStore.getState().past.length).toBe(steps)
   })
 })
 

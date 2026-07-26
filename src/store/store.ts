@@ -349,6 +349,24 @@ export const storeApi = {
     })
   },
 
+  /**
+   * Point the plan's "up" at a compass bearing, normalised into 0..359.
+   *
+   * Lives here rather than inline in the Compass because it used to be written as
+   * `update((p) => (p.orientationDeg = ...))` — a parenthesised assignment, so the
+   * recipe both mutated the draft and returned the assigned number, which Immer
+   * rejects outright. The setter threw, the bearing never changed, and the compass
+   * was silently dead along with everything downstream of it (sun exposure, the
+   * west-sun uplift in aircon sizing, the north arrow on the exported plan).
+   * Transient like the original: dragging the slider isn't an undo step.
+   */
+  setOrientation(deg: number) {
+    const normalised = ((deg % 360) + 360) % 360
+    useStore.getState().update((p) => {
+      p.orientationDeg = normalised
+    })
+  },
+
   // ---- clipboard ----
   /** Snapshot the selected furniture into the clipboard. Returns how many. */
   copyItems(): number {

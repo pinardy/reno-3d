@@ -1,11 +1,10 @@
-import { useStore } from '../../store/store'
+import { useStore, storeApi } from '../../store/store'
 
 // Sets which compass bearing the plan's "up" faces, so the sun (with the
 // time-of-day slider) aligns to real directions.
 export function Compass() {
   const orientation = useStore((s) => s.project.orientationDeg ?? 0)
-  const update = useStore((s) => s.update)
-  const set = (v: number) => update((p) => (p.orientationDeg = ((v % 360) + 360) % 360))
+  const set = (v: number) => storeApi.setOrientation(v)
 
   return (
     <div
