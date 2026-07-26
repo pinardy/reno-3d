@@ -107,9 +107,10 @@ export function makeSampleProject(): Project {
     place('coffee-table', 2, 3.1),
     place('tv-console', 2, 0.4),
     place('rug', 2, 3.2),
-    place('bed-queen', 5.5, 1.3),
-    place('wardrobe', 6.5, 4, -90),
-    place('nightstand', 4.5, 0.4),
+    // clear of the bedroom door's swing, which reaches ~0.9m in from x=4
+    place('bed-queen', 5.75, 1.25),
+    place('wardrobe', 6.6, 4.1, -90),
+    place('nightstand', 4.75, 0.35),
   ]
 
   p.updatedAt = 0

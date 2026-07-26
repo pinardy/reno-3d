@@ -16,7 +16,10 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Typecheck
+        # covers src and src/__tests__ (see tsconfig.test.json)
         run: npx tsc -b --noEmit
+      - name: Lint
+        run: npm run lint
       - name: Test
         run: npm test
       - name: Build
