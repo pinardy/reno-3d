@@ -11,6 +11,7 @@ import { type View, screenToWorld, zoomAt } from './view'
 import { dist, projectOnSegment } from '../../geometry/vec'
 import { drawTrace } from './renderer'
 import { near, pointInPoly, cursorFor, hintFor } from './canvasUtil'
+import { useIsCoarsePointer } from '../../lib/device'
 
 const PROVISIONAL_PPM = 100 // px/m used before the plan image is calibrated
 const GRID = 0.1 // metres — fine grid snap step
@@ -696,6 +697,7 @@ export function TraceEditor() {
 
   const hasImage = useStore((s) => !!s.project.floorPlan.imageDataUrl)
   const calibrated = useStore((s) => s.project.floorPlan.pxPerMeter != null)
+  const coarse = useIsCoarsePointer()
 
   return (
     <div ref={containerRef} className="absolute inset-0 overflow-hidden">
@@ -718,11 +720,11 @@ export function TraceEditor() {
       )}
 
       {/* status hints */}
-      <div className="pointer-events-none absolute bottom-3 left-3 rounded-md bg-panel/80 px-3 py-1.5 text-[11px] text-neutral-400 backdrop-blur">
-        {(tool === 'wall' || tool === 'room')
+      <div className="pointer-events-none absolute bottom-3 left-2 right-24 rounded-md bg-panel/80 px-3 py-1.5 text-[11px] text-neutral-400 backdrop-blur sm:left-3 sm:right-auto">
+        {(tool === 'wall' || tool === 'room') && !coarse
           ? 'Tip: point with the mouse, then type a number + Enter for an exact length. '
           : ''}
-        {hintFor(tool, hasImage, calibrated)}
+        {hintFor(tool, hasImage, calibrated, coarse)}
       </div>
       <button
         type="button"

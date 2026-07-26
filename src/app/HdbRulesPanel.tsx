@@ -82,7 +82,7 @@ export function HdbRulesPanel() {
       onClick={() => setOpen(false)}
     >
       <div
-        className="no-scrollbar max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-edge bg-panel p-6 shadow-2xl"
+        className="no-scrollbar max-h-[85vh] w-full max-w-xl overflow-y-auto overscroll-contain rounded-2xl border border-edge bg-panel p-4 shadow-2xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-1 flex items-start justify-between">

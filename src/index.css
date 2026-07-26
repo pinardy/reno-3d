@@ -18,6 +18,25 @@ body {
   background: #14161a;
   color: #e6e8ec;
   overflow: hidden;
+  /* stop pull-to-refresh and rubber-banding from hijacking canvas drags */
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS Safari's dynamic toolbars make 100% height jump around; dvh tracks the
+   actually-visible viewport. Kept as a progressive enhancement. */
+@supports (height: 100dvh) {
+  html,
+  body,
+  #root {
+    height: 100dvh;
+  }
+}
+
+/* remove the 300ms tap delay on controls without disabling pinch-zoom globally */
+button,
+[role='button'] {
+  touch-action: manipulation;
 }
 
 * {

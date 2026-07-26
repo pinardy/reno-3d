@@ -3,6 +3,7 @@ import { Sky } from '@react-three/drei'
 import { useStore } from '../../store/store'
 import { polygonCentroid } from '../../geometry/vec'
 import { roomBBoxSize } from '../trace/rooms'
+import { useIsSmallScreen } from '../../lib/device'
 
 // Sky + sun driven by a time-of-day value (0..1, 0.5 = midday), plus per-room
 // ceiling lights that brighten as it gets dark.
@@ -10,6 +11,7 @@ export const Lighting = memo(function Lighting({ timeOfDay }: { timeOfDay: numbe
   const rooms = useStore((s) => s.project.rooms)
   const wallHeight = useStore((s) => s.project.wallHeight)
   const orientation = useStore((s) => s.project.orientationDeg ?? 0)
+  const small = useIsSmallScreen()
 
   const elevation = Math.cos((timeOfDay - 0.5) * Math.PI * 1.15)
   const daylight = Math.max(0, elevation) // 0 at night, 1 at noon
@@ -38,7 +40,8 @@ export const Lighting = memo(function Lighting({ timeOfDay }: { timeOfDay: numbe
         intensity={0.15 + daylight * 2.3}
         color={sunColor}
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        // a 2048² sun shadow map is a heavy allocation on a phone GPU
+        shadow-mapSize={small ? [1024, 1024] : [2048, 2048]}
         shadow-camera-left={-20}
         shadow-camera-right={20}
         shadow-camera-top={20}

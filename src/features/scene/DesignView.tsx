@@ -8,6 +8,7 @@ import { catalogById, newItemFromCatalog } from '../catalog/catalog'
 import { makeSampleProject } from '../sample/sample'
 import { TEMPLATES } from '../sample/templates'
 import { exportFloorPlanPNG } from '../persistence/floorplanExport'
+import { isSmallScreen, useIsSmallScreen } from '../../lib/device'
 
 export function DesignView() {
   const pickerRef = useRef<GroundPicker | null>(null)
@@ -16,8 +17,11 @@ export function DesignView() {
   const [dollhouse, setDollhouse] = useState(false)
   const [measure, setMeasure] = useState(false)
   const [showCeilings, setShowCeilings] = useState(false)
-  const [hq, setHq] = useState(true)
+  // the postprocessing pass (AO + bloom + AA) is too heavy for a phone GPU, so
+  // start it off there — the toggle is still available if the device can take it
+  const [hq, setHq] = useState(() => !isSmallScreen())
   const [timeOfDay, setTimeOfDay] = useState(0.5)
+  const small = useIsSmallScreen()
   const cameraMode = useStore((s) => s.cameraMode)
   const hasContent = useStore(
     (s) => s.project.walls.length > 0 || s.project.items.length > 0,
@@ -43,7 +47,9 @@ export function DesignView() {
     >
       <Canvas
         shadows
-        dpr={[1, 2]}
+        // a phone's device pixel ratio is often 3; rendering the full 3D scene at
+        // that resolution costs far more than it shows
+        dpr={[1, small ? 1.5 : 2]}
         gl={{ preserveDrawingBuffer: true, antialias: true }}
         camera={{ position: [10, 9, 12], fov: 50, near: 0.05, far: 500 }}
       >
@@ -59,8 +65,8 @@ export function DesignView() {
         />
       </Canvas>
 
-      {/* top-left toolbar */}
-      <div className="absolute left-3 top-3 flex items-center gap-2">
+      {/* top-left toolbar — wraps into rows once it runs out of width */}
+      <div className="absolute left-2 right-2 top-2 flex flex-wrap items-start gap-1.5 sm:left-3 sm:right-auto sm:top-3 sm:items-center sm:gap-2">
         {cameraMode === 'orbit' && (
           <div className="flex items-center gap-1 rounded-lg bg-panel/90 p-1 backdrop-blur">
             <button
@@ -71,7 +77,7 @@ export function DesignView() {
                 gizmoMode === 'move' ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
               }`}
             >
-              <Move size={14} /> Move
+              <Move size={14} /> <span className="hidden sm:inline">Move</span>
             </button>
             <button
               type="button"
@@ -81,7 +87,7 @@ export function DesignView() {
                 gizmoMode === 'rotate' ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
               }`}
             >
-              <RotateCw size={14} /> Rotate
+              <RotateCw size={14} /> <span className="hidden sm:inline">Rotate</span>
             </button>
           </div>
         )}
@@ -94,7 +100,7 @@ export function DesignView() {
               showDimensions ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
             }`}
           >
-            <Ruler size={14} /> Dimensions
+            <Ruler size={14} /> <span className="hidden sm:inline">Dimensions</span>
           </button>
           <button
             type="button"
@@ -104,7 +110,7 @@ export function DesignView() {
               dollhouse ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
             }`}
           >
-            <Building2 size={14} /> Dollhouse
+            <Building2 size={14} /> <span className="hidden sm:inline">Dollhouse</span>
           </button>
           <button
             type="button"
@@ -114,7 +120,7 @@ export function DesignView() {
               measure ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
             }`}
           >
-            <PencilRuler size={14} /> Measure
+            <PencilRuler size={14} /> <span className="hidden sm:inline">Measure</span>
           </button>
           <button
             type="button"
@@ -124,7 +130,7 @@ export function DesignView() {
               showCeilings ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
             }`}
           >
-            <SquareStack size={14} /> Ceilings
+            <SquareStack size={14} /> <span className="hidden sm:inline">Ceilings</span>
           </button>
           <button
             type="button"
@@ -134,7 +140,7 @@ export function DesignView() {
               hq ? 'bg-accent text-white' : 'text-neutral-300 hover:bg-panel2'
             }`}
           >
-            <Sparkles size={14} /> HQ
+            <Sparkles size={14} /> <span className="hidden sm:inline">HQ</span>
           </button>
           <button
             type="button"
@@ -142,7 +148,7 @@ export function DesignView() {
             onClick={() => exportFloorPlanPNG(useStore.getState().project)}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-neutral-300 hover:bg-panel2"
           >
-            <Map size={14} /> Floor plan
+            <Map size={14} /> <span className="hidden sm:inline">Floor plan</span>
           </button>
         </div>
         {/* time of day */}
@@ -165,24 +171,28 @@ export function DesignView() {
       </div>
 
       {/* hints */}
-      <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md bg-panel/80 px-3 py-1.5 text-[11px] text-neutral-400 backdrop-blur">
-        <Info size={12} />
+      <div className="pointer-events-none absolute bottom-3 left-2 right-2 flex items-center gap-1.5 rounded-md bg-panel/80 px-3 py-1.5 text-[11px] text-neutral-400 backdrop-blur sm:left-3 sm:right-auto">
+        <Info size={12} className="shrink-0" />
         {cameraMode === 'walk'
           ? 'Walk: click to lock the mouse, WASD / arrows to move, Esc to release.'
           : measure
-            ? 'Measure: click two points on any surface to see the distance. Click again to start over.'
-            : 'Drag furniture from the left. Drag it on the floor to move · switch to Rotate to spin · Shift snaps to grid.'}
+            ? small
+              ? 'Measure: tap two points on any surface to see the distance.'
+              : 'Measure: click two points on any surface to see the distance. Click again to start over.'
+            : small
+              ? 'Tap Furniture below to add · drag an item to move it · two fingers to pan and zoom.'
+              : 'Drag furniture from the left. Drag it on the floor to move · switch to Rotate to spin · Shift snaps to grid.'}
       </div>
 
       {!hasContent && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="rounded-xl bg-panel/90 px-6 py-5 text-center backdrop-blur">
+          <div className="mx-4 rounded-xl bg-panel/90 px-6 py-5 text-center backdrop-blur">
             <p className="text-sm font-medium text-neutral-200">Nothing to show yet</p>
             <p className="mt-1 text-xs text-neutral-400">
               Switch to <span className="text-accent">Trace 2D</span> and draw some
               walls — they'll appear here in 3D.
             </p>
-            <div className="mt-3 flex items-center justify-center gap-1.5">
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
               {TEMPLATES.map((t) => (
                 <button
                   key={t.id}

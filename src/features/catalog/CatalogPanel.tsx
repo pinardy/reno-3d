@@ -31,6 +31,7 @@ import {
 import { polygonCentroid } from '../../geometry/vec'
 import { getFocusPoint } from '../scene/focus'
 import { clearOf } from './placement'
+import { useIsCoarsePointer } from '../../lib/device'
 
 const KIND_ICON: Partial<Record<ItemKind, LucideIcon>> = {
   sofa: Sofa,
@@ -53,6 +54,7 @@ const KIND_ICON: Partial<Record<ItemKind, LucideIcon>> = {
 export function CatalogPanel() {
   const [cat, setCat] = useState<Category>('Living')
   const [q, setQ] = useState('')
+  const coarse = useIsCoarsePointer()
   const query = q.trim().toLowerCase()
   const items = query
     ? CATALOG.filter((c) => c.name.toLowerCase().includes(query))
@@ -136,7 +138,11 @@ export function CatalogPanel() {
                 e.dataTransfer.effectAllowed = 'copy'
               }}
               onClick={() => addAtDefault(entry)}
-              title={`${entry.name} — drag into the scene or click to add`}
+              title={
+                coarse
+                  ? `${entry.name} — tap to place it in view`
+                  : `${entry.name} — drag into the scene or click to add`
+              }
               className="flex cursor-grab flex-col items-center gap-1.5 rounded-lg border border-edge bg-panel2 p-2.5 text-center transition-colors hover:border-accent/60 hover:bg-edge active:cursor-grabbing"
             >
               <span
@@ -169,13 +175,24 @@ export function CatalogPanel() {
       </Section>
 
       <Section title="How to place">
-        <ul className="space-y-1 text-[11px] text-neutral-400">
-          <li>• Drag an item into the scene to drop it precisely.</li>
-          <li>• Or click to add it where the camera is looking.</li>
-          <li>• In the scene: drag to move, switch to Rotate to spin.</li>
-          <li>• Cabinets snap their back to the nearest wall.</li>
-          <li>• Cmd/Ctrl+D duplicates the selected item.</li>
-        </ul>
+        {coarse ? (
+          // touch devices never fire HTML5 drag-and-drop, so tapping is the only
+          // way in — say so rather than advertising a drag that cannot work
+          <ul className="space-y-1 text-[11px] text-neutral-400">
+            <li>• Tap an item to add it where the camera is looking.</li>
+            <li>• Drag it on the floor to move it, or switch to Rotate to spin.</li>
+            <li>• Two fingers pan and zoom the view.</li>
+            <li>• Cabinets snap their back to the nearest wall.</li>
+          </ul>
+        ) : (
+          <ul className="space-y-1 text-[11px] text-neutral-400">
+            <li>• Drag an item into the scene to drop it precisely.</li>
+            <li>• Or click to add it where the camera is looking.</li>
+            <li>• In the scene: drag to move, switch to Rotate to spin.</li>
+            <li>• Cabinets snap their back to the nearest wall.</li>
+            <li>• Cmd/Ctrl+D duplicates the selected item.</li>
+          </ul>
+        )}
       </Section>
     </div>
   )

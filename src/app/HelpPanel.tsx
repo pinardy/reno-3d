@@ -1,5 +1,6 @@
 import { X, Upload, Ruler, Minus, Box, Package, Keyboard } from 'lucide-react'
 import { useStore } from '../store/store'
+import { useIsCoarsePointer } from '../lib/device'
 
 const STEPS = [
   {
@@ -43,7 +44,21 @@ const SHORTCUTS: [string, string][] = [
 export function HelpPanel() {
   const open = useStore((s) => s.helpOpen)
   const setOpen = useStore((s) => s.setHelpOpen)
+  const coarse = useIsCoarsePointer()
   if (!open) return null
+
+  const steps = coarse
+    ? STEPS.map((s) =>
+        s.title.startsWith('5')
+          ? {
+              ...s,
+              // there is no right-hand panel on a phone, and dragging from the
+              // catalog can't work on touch
+              body: 'Tap Furniture at the bottom to place items, then open Details to recolour surfaces and check areas + the shopping-list budget. Everything autosaves in your browser.',
+            }
+          : s,
+      )
+    : STEPS
 
   return (
     <div
@@ -51,7 +66,7 @@ export function HelpPanel() {
       onClick={() => setOpen(false)}
     >
       <div
-        className="no-scrollbar max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-edge bg-panel p-6 shadow-2xl"
+        className="no-scrollbar max-h-[85vh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-2xl border border-edge bg-panel p-4 shadow-2xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between">
@@ -71,7 +86,7 @@ export function HelpPanel() {
         </div>
 
         <div className="space-y-3">
-          {STEPS.map((s) => (
+          {steps.map((s) => (
             <div key={s.title} className="flex gap-3 rounded-lg bg-panel2 p-3">
               <div className="mt-0.5 text-accent">{s.icon}</div>
               <div>
@@ -82,7 +97,8 @@ export function HelpPanel() {
           ))}
         </div>
 
-        <div className="mt-5">
+        {/* a touch device has no keyboard to press these on */}
+        <div className={coarse ? 'hidden' : 'mt-5'}>
           <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
             <Keyboard size={13} /> Keyboard shortcuts
           </div>

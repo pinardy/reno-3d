@@ -9,6 +9,8 @@ import { useStore } from './store/store'
 import { usePersistence } from './features/persistence/autosave'
 import { useShareImport } from './features/persistence/share'
 import { useKeyboardShortcuts } from './app/useKeyboardShortcuts'
+import { MobilePanels } from './app/MobilePanels'
+import { useIsSmallScreen } from './lib/device'
 
 // The 3D view pulls in three.js / R3F / drei — load it on demand so the initial
 // (2D tracing) bundle stays small.
@@ -18,6 +20,7 @@ const DesignView = lazy(() =>
 
 export default function App() {
   const editorMode = useStore((s) => s.editorMode)
+  const small = useIsSmallScreen()
 
   useShareImport()
   usePersistence()
@@ -36,7 +39,7 @@ export default function App() {
     <div className="flex h-full w-full flex-col">
       <Toolbar />
       <div className="flex min-h-0 flex-1">
-        <LeftPanel />
+        {!small && <LeftPanel />}
         <main className="relative min-w-0 flex-1 bg-[#14161a]">
           {editorMode === 'trace' ? (
             <TraceEditor />
@@ -52,8 +55,9 @@ export default function App() {
             </Suspense>
           )}
         </main>
-        <RightPanel />
+        {!small && <RightPanel />}
       </div>
+      {small && <MobilePanels />}
       <HelpPanel />
       <HdbRulesPanel />
     </div>
