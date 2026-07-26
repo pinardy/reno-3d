@@ -364,8 +364,108 @@ export function makeHDB5Room(): Project {
   return b.build()
 }
 
+/**
+ * 2-room Flexi — the smallest BTO flat, ~36–38 m² internal, one bedroom off a
+ * combined living/dining with the kitchen along one wall. Sold to singles and to
+ * older buyers on shorter leases, and the layout people most often ask whether a
+ * proper bed plus a wardrobe will actually fit into.
+ */
+export function makeHDB2Room(): Project {
+  const W = 6.6
+  const D = 5.8
+  const b = new FlatBuilder('HDB 2-Room Flexi (approx)', W, D)
+  const split = 3.6 // living/bedroom above, wet rooms below
+  const bedWall = b.wall(split, 0, split, split)
+  const wetWall = b.wall(0, split, W, split)
+  b.wall(1.8, split, 1.8, D) // bathroom / kitchen
+
+  b.room('Living / Dining', 0, 0, split, split, WOODF)
+  b.room('Bedroom', split, 0, W - split, split, DARKF)
+  b.room('Bathroom', 0, split, 1.8, D - split, TILE)
+  b.room('Kitchen', 1.8, split, W - 1.8, D - split, TILE)
+
+  b.doorAt(b.left, 0, 2.0) // entrance off the common corridor
+  b.doorAt(bedWall, split, 1.8)
+  b.doorAt(wetWall, 0.9, split, 0.8, 'left', 'sliding')
+  b.windowAt(b.top, 1.8, 0, 1.6)
+  b.windowAt(b.right, W, 1.8, 1.4)
+
+  // A 3.6 x 3.6m living/dining takes a two-seater and a TV, and that is genuinely
+  // all — there is no room for a dining table as well once the entrance and
+  // bedroom doors have their swings. In a flat this size people eat at a small
+  // table in the kitchen, so nothing is drawn here that wouldn't fit.
+  b.place('tv-console', 1.9, 0.35, 180)
+  b.place('tv-55', 1.9, 0.35, 180, 0.5)
+  b.place('coffee-table', 1.9, 1.7)
+  b.place('loveseat', 1.9, 2.9, 0)
+  b.kitchenRun(1.8, split, W - 1.8)
+  b.bathroomSet(0, split, 1.8, D - split)
+  b.bedroomSet(split, 0, W - split, split, true)
+  return b.build()
+}
+
+/**
+ * The 4-room layout used in BTO launches from about 2021: a rectangular footprint
+ * with the household shelter built into the service area beside the kitchen, and
+ * the three bedrooms off a short corridor. The shelter is the thing worth having in
+ * the model — it can't be hacked, and planning storage around it is most of the
+ * reason people redraw this layout by hand.
+ */
+export function makeHDB4RoomModern(): Project {
+  const W = 9.8
+  const D = 10.4
+  const b = new FlatBuilder('HDB 4-Room, 2021+ (approx)', W, D)
+  const vx = 5.4
+  const kz = 3.4 // deeper kitchen than the older layout, to take the shelter
+  const spine = b.wall(vx, 0, vx, D)
+  b.wall(vx, kz, W, kz) // kitchen / bathrooms
+  b.wall(vx, 5.2, W, 5.2) // bathrooms / bedrooms
+  b.wall(vx, 7.6, W, 7.6) // bedrooms / master
+  b.wall(7.6, kz, 7.6, 5.2) // bathroom / WC
+  b.wall(7.6, 5.2, 7.6, 7.6) // bedroom 2 / bedroom 3
+
+  b.room('Living / Dining', 0, 0, vx, D, WOODF)
+  b.room('Kitchen', vx, 0, W - vx, kz, TILE)
+  b.room('Bathroom', vx, kz, 7.6 - vx, 1.8, TILE)
+  b.room('WC', 7.6, kz, W - 7.6, 1.8, TILE)
+  b.room('Bedroom 2', vx, 5.2, 7.6 - vx, 2.4, DARKF)
+  b.room('Bedroom 3', 7.6, 5.2, W - 7.6, 2.4, DARKF)
+  b.room('Master Bedroom', vx, 7.6, W - vx, D - 7.6, DARKF)
+
+  b.doorAt(b.bottom, 2.8, D) // entrance
+  b.doorAt(spine, vx, 1.6) // to kitchen
+  b.doorAt(spine, vx, 4.3, 0.9, 'left', 'sliding') // bath doors slide
+  b.doorAt(spine, vx, 6.2) // bedroom 2
+  b.doorAt(spine, vx, 8.9) // master
+  b.windowAt(b.left, 0, 5.2, 2.0)
+  b.windowAt(b.right, W, 6.4)
+  b.windowAt(b.right, W, 9.0)
+
+  b.place('sectional-sofa', 2.0, 7.8, 0)
+  b.place('coffee-table', 2.0, 6.2)
+  b.place('tv-console', 2.0, 0.5, 180)
+  b.place('tv-55', 2.0, 0.5, 180, 0.5)
+  b.place('rug', 2.0, 6.4)
+  b.place('dining-table', 3.4, 2.8)
+  b.place('chair', 3.4, 2.1)
+  b.place('chair', 3.4, 3.5, 180)
+  b.kitchenRun(vx, 0, W - vx, kz)
+  // The household shelter, in the service corner past the fridge. This is the
+  // reason to have this layout in the model at all: it can't be hacked, so the
+  // storage everyone plans for that corner has to work around it.
+  b.place('household-shelter', W - 0.83, 2.4, 0)
+  b.bathroomSet(vx, kz, 7.6 - vx, 1.8)
+  b.bathroomSet(7.6, kz, W - 7.6, 1.8)
+  b.bedroomSet(vx, 5.2, 7.6 - vx, 2.4)
+  b.bedroomSet(7.6, 5.2, W - 7.6, 2.4)
+  b.bedroomSet(vx, 7.6, W - vx, D - 7.6, true)
+  return b.build()
+}
+
 export const TEMPLATES: { id: string; name: string; make: () => Project }[] = [
+  { id: 'hdb2', name: 'HDB 2-Room Flexi', make: makeHDB2Room },
   { id: 'hdb3', name: 'HDB 3-Room', make: makeHDB3Room },
   { id: 'hdb4', name: 'HDB 4-Room', make: makeHDB4Room },
+  { id: 'hdb4m', name: 'HDB 4-Room (2021+)', make: makeHDB4RoomModern },
   { id: 'hdb5', name: 'HDB 5-Room', make: makeHDB5Room },
 ]
