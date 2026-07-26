@@ -10,6 +10,7 @@ import { usePersistence } from './features/persistence/autosave'
 import { useShareImport } from './features/persistence/share'
 import { useKeyboardShortcuts } from './app/useKeyboardShortcuts'
 import { MobilePanels } from './app/MobilePanels'
+import { ErrorBoundary } from './app/ErrorBoundary'
 import { useIsSmallScreen } from './lib/device'
 
 // The 3D view pulls in three.js / R3F / drei — load it on demand so the initial
@@ -44,15 +45,17 @@ export default function App() {
           {editorMode === 'trace' ? (
             <TraceEditor />
           ) : (
-            <Suspense
-              fallback={
-                <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-400">
-                  Loading 3D view…
-                </div>
-              }
-            >
-              <DesignView />
-            </Suspense>
+            <ErrorBoundary fallbackLabel="Couldn't load the 3D view">
+              <Suspense
+                fallback={
+                  <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-400">
+                    Loading 3D view…
+                  </div>
+                }
+              >
+                <DesignView />
+              </Suspense>
+            </ErrorBoundary>
           )}
         </main>
         {!small && <RightPanel />}
