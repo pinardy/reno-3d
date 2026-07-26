@@ -4,6 +4,7 @@ import { LeftPanel } from './app/LeftPanel'
 import { RightPanel } from './app/RightPanel'
 import { HelpPanel } from './app/HelpPanel'
 import { HdbRulesPanel } from './app/HdbRulesPanel'
+import { CompareModal } from './features/variants/CompareModal'
 import { TraceEditor } from './features/trace/TraceEditor'
 import { useStore } from './store/store'
 import { usePersistence } from './features/persistence/autosave'
@@ -63,6 +64,7 @@ export default function App() {
       {small && <MobilePanels />}
       <HelpPanel />
       <HdbRulesPanel />
+      <CompareModal />
     </div>
   )
 }

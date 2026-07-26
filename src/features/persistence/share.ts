@@ -13,6 +13,9 @@ function stripHeavy(p: Project): Project {
     ...p,
     floorPlan: { ...p.floorPlan, imageDataUrl: null },
     items: p.items.map((it) => (it.kind === 'glb' ? { ...it, modelUrl: undefined } : it)),
+    // The rest of the variant family isn't in the link, so the link to it would
+    // dangle on the recipient's machine — they get a standalone layout.
+    variantOf: undefined,
   }
 }
 

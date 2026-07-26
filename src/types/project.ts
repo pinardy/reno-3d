@@ -145,6 +145,12 @@ export interface Project {
   orientationDeg: number // compass bearing that screen-up / plan-up faces (0 = North up)
   views?: SavedView[] // optional so older saved projects load unchanged
   aircon?: AirconPlan // optional for the same reason
+  /**
+   * Id of the project this one is a variant of — the root of a family of layouts
+   * being weighed against each other. Absent on a project that isn't a variant;
+   * variants of variants point at the same root, so a family stays flat.
+   */
+  variantOf?: string
 }
 
 export const DEFAULT_TRUNKING_W = 0.1

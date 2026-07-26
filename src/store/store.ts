@@ -34,10 +34,12 @@ interface AppState {
   saveState: 'idle' | 'saving' | 'saved'
   helpOpen: boolean
   hdbOpen: boolean
+  compareOpen: boolean
 
   setSaveState: (s: 'idle' | 'saving' | 'saved') => void
   setHelpOpen: (v: boolean) => void
   setHdbOpen: (v: boolean) => void
+  setCompareOpen: (v: boolean) => void
 
   // ----- meta / mode -----
   setEditorMode: (m: EditorMode) => void
@@ -88,10 +90,12 @@ export const useStore = create<AppState>((set, get) => ({
   saveState: 'idle',
   helpOpen: false,
   hdbOpen: false,
+  compareOpen: false,
 
   setSaveState: (s) => set({ saveState: s }),
   setHelpOpen: (v) => set({ helpOpen: v }),
   setHdbOpen: (v) => set({ hdbOpen: v }),
+  setCompareOpen: (v) => set({ compareOpen: v }),
 
   setEditorMode: (m) => set({ editorMode: m }),
   setTool: (t) =>

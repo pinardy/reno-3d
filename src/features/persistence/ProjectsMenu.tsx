@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { FolderOpen, Plus, Copy, Trash2, Check } from 'lucide-react'
+import { FolderOpen, Plus, Copy, Trash2, Check, GitCompare, GitBranch } from 'lucide-react'
 import { useStore } from '../../store/store'
 import {
   listProjects,
@@ -9,6 +9,7 @@ import {
   deleteProject,
 } from './db'
 import { migrateProject } from './io'
+import { familyRoot, nextVariantName } from '../variants/variants'
 
 interface Row {
   id: string
@@ -53,6 +54,35 @@ export function ProjectsMenu({ compact = false }: { compact?: boolean }) {
     refresh()
   }
 
+  /**
+   * Copy a layout as an alternative to weigh against the original, rather than as
+   * an unrelated project: it joins the source's variant family so Compare can put
+   * their numbers side by side. Opens it straight away, since the point is to start
+   * rearranging it.
+   */
+  async function duplicateAsVariant(id: string) {
+    const src = await dbLoad(id)
+    if (!src) return
+    const base = migrateProject(src)
+    const root = familyRoot(base)
+    // names already in the family, so the new one gets the next free letter
+    const all = await Promise.all((await listProjects()).map((r) => dbLoad(r.id)))
+    const family = all
+      .filter(Boolean)
+      .map((p) => migrateProject(p!))
+      .filter((p) => familyRoot(p) === root)
+    const variant = {
+      ...base,
+      id: nanoid(),
+      name: nextVariantName(base.name, family.map((p) => p.name)),
+      variantOf: root,
+      updatedAt: Date.now(),
+    }
+    await saveProject(variant)
+    storeLoad(variant)
+    setOpen(false)
+  }
+
   async function remove(id: string, name: string) {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
     await deleteProject(id)
@@ -90,16 +120,29 @@ export function ProjectsMenu({ compact = false }: { compact?: boolean }) {
               <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
                 Saved homes
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  newProject()
-                  setOpen(false)
-                }}
-                className="flex items-center gap-1 rounded bg-accent/15 px-2 py-1 text-[11px] text-accent hover:bg-accent/25"
-              >
-                <Plus size={12} /> New
-              </button>
+              <span className="flex items-center gap-1">
+                <button
+                  type="button"
+                  title="Compare layouts side by side"
+                  onClick={() => {
+                    setOpen(false)
+                    useStore.getState().setCompareOpen(true)
+                  }}
+                  className="flex items-center gap-1 rounded bg-panel2 px-2 py-1 text-[11px] text-neutral-300 hover:bg-edge"
+                >
+                  <GitCompare size={12} /> Compare
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    newProject()
+                    setOpen(false)
+                  }}
+                  className="flex items-center gap-1 rounded bg-accent/15 px-2 py-1 text-[11px] text-accent hover:bg-accent/25"
+                >
+                  <Plus size={12} /> New
+                </button>
+              </span>
             </div>
             <div className="no-scrollbar max-h-80 overflow-y-auto py-1">
               {rows.length === 0 && (
@@ -128,6 +171,14 @@ export function ProjectsMenu({ compact = false }: { compact?: boolean }) {
                         {r.updatedAt ? new Date(r.updatedAt).toLocaleString() : 'unsaved'}
                       </span>
                     </span>
+                  </button>
+                  <button
+                    type="button"
+                    title="Duplicate as variant — an alternative to compare against this one"
+                    onClick={() => duplicateAsVariant(r.id)}
+                    className="rounded p-1 text-neutral-400 opacity-0 hover:bg-edge hover:text-neutral-200 group-hover:opacity-100"
+                  >
+                    <GitBranch size={13} />
                   </button>
                   <button
                     type="button"
