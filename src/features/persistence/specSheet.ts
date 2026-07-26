@@ -6,6 +6,14 @@ import { captureScene } from '../scene/screenshot'
 import { elevationRuns, feetRun } from '../elevation/elevation'
 import { elevationDataUrl, runSummary } from '../elevation/elevationDraw'
 import { airconPlan, condensers, fanCoils, runLength, systemLabel } from '../aircon/aircon'
+import {
+  DEFAULT_COATS,
+  paintQuantity,
+  skirtingPieces,
+  takeoff,
+  tileQuantity,
+  tileSizeById,
+} from '../takeoff/takeoff'
 
 const RATE_KEY = 'reno:costRatePerM2'
 
@@ -51,6 +59,16 @@ export function openSpecSheet(project: Project) {
     .join('')
   const airconTotal = acPlan.runs.reduce((s, r) => s + runLength(r.points), 0)
 
+  // Quantity takeoff — the painter's and tiler's line items.
+  const tk = takeoff(project)
+  const tile = tileSizeById(localStorage.getItem('reno:tileSize') ?? '600x600')
+  const coats = Number(localStorage.getItem('reno:paintCoats')) || DEFAULT_COATS
+  const wastagePct = Number(localStorage.getItem('reno:tileWastage'))
+  const wastage = Number.isFinite(wastagePct) && wastagePct > 0 ? wastagePct / 100 : 0.1
+  const paintTotal = paintQuantity(tk.paintWallArea + tk.ceilingArea, coats)
+  const floorTile = tileQuantity(tk.floorArea, tile, wastage)
+  const wallTile = tileQuantity(tk.tileWallArea, tile, wastage)
+
   const areaRows = areas
     .map((a) => `<tr><td>${esc(a.name)}</td><td class="num">${a.area.toFixed(1)} m²</td></tr>`)
     .join('')
@@ -93,6 +111,25 @@ export function openSpecSheet(project: Project) {
   <table><tbody>${areaRows || '<tr><td>No rooms defined</td><td></td></tr>'}
     <tr><td><b>Total floor area</b></td><td class="num"><b>${totalArea.toFixed(1)} m²</b></td></tr>
   </tbody></table>
+
+  ${
+    tk.rooms.length
+      ? `<h2>Paint, tile &amp; skirting</h2>
+  <table><thead><tr><th>Item</th><th class="num">Area</th><th class="num">Quantity</th></tr></thead>
+  <tbody>
+    <tr><td>Wall paint (dry rooms), ${coats} coats</td><td class="num">${tk.paintWallArea.toFixed(1)} m²</td><td class="num">—</td></tr>
+    <tr><td>Ceiling paint, ${coats} coats</td><td class="num">${tk.ceilingArea.toFixed(1)} m²</td><td class="num">—</td></tr>
+    <tr><td><b>Paint total</b></td><td class="num"><b>${(tk.paintWallArea + tk.ceilingArea).toFixed(1)} m²</b></td><td class="num"><b>${paintTotal.litres.toFixed(1)} L (${paintTotal.pails} × 5 L)</b></td></tr>
+    <tr><td>Floor tile ${esc(tile.label)} mm, +${Math.round(wastage * 100)}% wastage</td><td class="num">${floorTile.ordered.toFixed(1)} m²</td><td class="num">${floorTile.pieces} pcs</td></tr>
+    ${tk.tileWallArea > 0 ? `<tr><td>Wall tile (wet rooms), +${Math.round(wastage * 100)}% wastage</td><td class="num">${wallTile.ordered.toFixed(1)} m²</td><td class="num">${wallTile.pieces} pcs</td></tr>` : ''}
+    <tr><td>Skirting (dry rooms)</td><td class="num">${tk.skirting.toFixed(1)} m</td><td class="num">${skirtingPieces(tk.skirting)} × 2.4 m</td></tr>
+  </tbody></table>
+  <p style="font-size:11px;color:#5b6472;margin:6px 0 0">
+    Wall areas are net of doors and windows (${tk.openingDeduction.toFixed(1)} m² deducted).
+    Bathroom and kitchen walls are counted as tile rather than paint.
+  </p>`
+      : ''
+  }
 
   ${
     runs.length
