@@ -38,7 +38,14 @@ export function compassOf(bearing: number): Compass8 {
 /** Windows and sliding doors let light in; solid doors and cased openings don't. */
 const GLAZED = new Set(['window', 'sliding'])
 
-export function roomSunExposure(project: Project): RoomSun[] {
+/**
+ * Only reads glazing, walls, rooms and the compass — never furniture. The
+ * parameter type says so rather than a comment, so ChecksPanel can memoise on
+ * exactly these slices and skip the pass while furniture is being dragged.
+ */
+export type SunInput = Pick<Project, 'walls' | 'openings' | 'rooms' | 'orientationDeg'>
+
+export function roomSunExposure(project: SunInput): RoomSun[] {
   const orientation = project.orientationDeg ?? 0
   const byRoom = new Map<string, Compass8[]>()
 

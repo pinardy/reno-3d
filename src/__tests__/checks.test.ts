@@ -270,6 +270,10 @@ describe('sun exposure', () => {
     })
     expect(roomSunExposure(project)).toEqual([])
   })
+
+  // That it ignores furniture is enforced by SunInput rather than asserted here:
+  // items aren't in the parameter type, so ChecksPanel can memoise on the glazing
+  // slices alone and keep this pass out of the drag path.
 })
 
 describe('alignment + snapping', () => {

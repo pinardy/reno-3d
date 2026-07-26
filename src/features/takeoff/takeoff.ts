@@ -77,7 +77,15 @@ export interface Takeoff {
  * column, so a 1.2m window in a 2.8m wall still leaves 1.6m of wall to paint above
  * and below it — deducting the whole column would understate the paint.
  */
-export function takeoff(project: Project): Takeoff {
+/**
+ * Walls, rooms and openings — and deliberately not items. Expressing that in the
+ * type rather than a comment is what lets TakeoffPanel memoise on these slices and
+ * skip this pass, the most expensive of them, whenever furniture moves. Heights
+ * come from each wall, not from the project's default for new walls.
+ */
+export type TakeoffInput = Pick<Project, 'walls' | 'rooms' | 'openings'>
+
+export function takeoff(project: TakeoffInput): Takeoff {
   const floors = project.rooms.filter((r) => r.loop.length >= 3)
   const byRoom = new Map<string, RoomTakeoff>()
   for (const r of floors) {

@@ -63,6 +63,48 @@ describe('plan orientation', () => {
   })
 })
 
+describe('structural sharing during a drag', () => {
+  // The analysis panels narrow their useMemo deps to the slices each pass reads, so
+  // that dragging furniture skips the passes that don't look at items — the takeoff
+  // being the expensive one. That only works because Immer leaves untouched slices
+  // reference-identical, which is what this pins down.
+  it('leaves walls, rooms and openings identical when only an item moves', () => {
+    const before = useStore.getState().project
+    const id = before.items[0].id
+    // what the drag handler does, once per pointermove
+    useStore.getState().update((p) => {
+      const it = p.items.find((i) => i.id === id)!
+      it.position.x += 0.1
+    })
+    const after = useStore.getState().project
+
+    expect(after).not.toBe(before) // the project itself changed
+    expect(after.items).not.toBe(before.items)
+    expect(after.items[0]).not.toBe(before.items[0])
+
+    // ...but the takeoff's and sun pass's inputs did not, so their memos hold
+    expect(after.walls).toBe(before.walls)
+    expect(after.rooms).toBe(before.rooms)
+    expect(after.openings).toBe(before.openings)
+    expect(after.wallHeight).toBe(before.wallHeight)
+    expect(after.orientationDeg).toBe(before.orientationDeg)
+
+    // and every other item keeps its identity, which is what the memoized
+    // ItemViews in the 3D scene rely on to avoid re-rendering the whole room
+    expect(after.items[1]).toBe(before.items[1])
+  })
+
+  it('does invalidate the wall slice when a wall actually changes', () => {
+    const before = useStore.getState().project
+    useStore.getState().update((p) => {
+      p.walls[0].height = 3.1
+    })
+    const after = useStore.getState().project
+    expect(after.walls).not.toBe(before.walls)
+    expect(after.items).toBe(before.items) // and leaves furniture alone
+  })
+})
+
 describe('copy / paste furniture', () => {
   it('copies the selected item and pastes an independent duplicate', () => {
     const src = useStore.getState().project.items[0]

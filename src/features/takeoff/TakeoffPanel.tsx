@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useDeferredValue, useMemo, useState } from 'react'
 import { PaintBucket, Grid3x3, Ruler } from 'lucide-react'
 import { useStore } from '../../store/store'
 import { Section } from '../../app/ui'
@@ -28,8 +28,13 @@ function stored(key: string, fallback: number): number {
  * a painter or tiler quotes, so the numbers can be compared rather than trusted.
  */
 export function TakeoffPanel() {
-  const project = useStore((s) => s.project)
-  const t = useMemo(() => takeoff(project), [project])
+  // Deferred so a drag gesture — which replaces `project` on every pointermove —
+  // yields to the interaction instead of blocking it on this panel's arithmetic.
+  const project = useDeferredValue(useStore((s) => s.project))
+  // Immer leaves untouched slices reference-identical, so passing just these three
+  // means moving furniture never re-runs the takeoff — the most expensive pass.
+  const { walls, rooms, openings } = project
+  const t = useMemo(() => takeoff({ walls, rooms, openings }), [walls, rooms, openings])
 
   const [tileId, setTileId] = useState(() => localStorage.getItem(TILE_KEY) ?? '600x600')
   const [wastage, setWastage] = useState(() => stored(WASTAGE_KEY, DEFAULT_WASTAGE * 100))

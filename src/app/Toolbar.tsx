@@ -42,8 +42,11 @@ export function Toolbar() {
   const future = useStore((s) => s.future.length)
   const name = useStore((s) => s.project.name)
   const renameProject = useStore((s) => s.renameProject)
-  const project = useStore((s) => s.project)
   const loadProject = useStore((s) => s.loadProject)
+  // Read the project at click time rather than subscribing to it. Subscribing
+  // re-rendered every button in the header on every pointermove of a drag, for
+  // data no button reads until it is pressed.
+  const currentProject = () => useStore.getState().project
   const saveState = useStore((s) => s.saveState)
   // renaming no longer commits per keystroke, so take one undo step per edit
   const checkpoint = useStore((s) => s.checkpoint)
@@ -59,15 +62,15 @@ export function Toolbar() {
     {
       icon: FileText,
       label: 'Print / save PDF spec sheet',
-      onClick: () => openSpecSheet(project),
+      onClick: () => openSpecSheet(currentProject()),
     },
-    { icon: Map, label: 'Export floor plan (PNG)', onClick: () => exportFloorPlanPNG(project) },
+    { icon: Map, label: 'Export floor plan (PNG)', onClick: () => exportFloorPlanPNG(currentProject()) },
     { icon: Boxes, label: 'Export 3D model (.glb)', onClick: () => exportHomeGltf() },
-    { icon: Share2, label: 'Copy a shareable link', onClick: () => copyShareLink(project) },
+    { icon: Share2, label: 'Copy a shareable link', onClick: () => copyShareLink(currentProject()) },
     {
       icon: Download,
       label: 'Export project (.json)',
-      onClick: () => exportProjectFile(project),
+      onClick: () => exportProjectFile(currentProject()),
     },
     {
       icon: Upload,

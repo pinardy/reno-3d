@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useDeferredValue, useMemo } from 'react'
 import {
   AirVent,
   AlertTriangle,
@@ -25,9 +25,12 @@ import {
 } from './aircon'
 
 export function AirconPanel() {
-  const project = useStore((s) => s.project)
+  // Advisory, so deferred for the same reason as the other check panels.
+  const project = useDeferredValue(useStore((s) => s.project))
   const select = useStore((s) => s.select)
 
+  // Every one of these reads items, so there is no narrowing to be had — the
+  // deferral above is what keeps them from competing with a drag.
   const coils = useMemo(() => fanCoils(project), [project])
   const outdoor = useMemo(() => condensers(project), [project])
   const plan = airconPlan(project)

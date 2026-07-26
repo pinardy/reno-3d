@@ -219,6 +219,20 @@ describe('takeoff geometry', () => {
   })
 })
 
+describe('inputs the takeoff depends on', () => {
+  // That it ignores furniture is enforced by TakeoffInput — items aren't in the
+  // parameter type, so the pass cannot read them and TakeoffPanel can safely
+  // memoise on walls/rooms/openings alone, skipping this (the most expensive pass)
+  // whenever furniture moves. No runtime test can beat the compiler here.
+  it('takes its heights from each wall, not the project default', () => {
+    const p = TEMPLATES[2].make()
+    const taller = { ...p, walls: p.walls.map((w) => ({ ...w, height: w.height + 1 })) }
+    expect(takeoff(taller).paintWallArea).toBeGreaterThan(takeoff(p).paintWallArea)
+    // `wallHeight` — the default for new walls — isn't in TakeoffInput either, so
+    // changing it cannot affect walls that already exist.
+  })
+})
+
 describe('paint quantities', () => {
   it('scales with area and coats at the stated coverage', () => {
     const q = paintQuantity(110, 2)

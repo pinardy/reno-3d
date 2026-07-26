@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useDeferredValue, useMemo } from 'react'
 import { AlertTriangle, CheckCircle2, Sun, Sunrise, Sunset, ShieldAlert } from 'lucide-react'
 import { useStore } from '../../store/store'
 import { Section } from '../../app/ui'
@@ -15,17 +15,23 @@ const LABEL: Record<IssueKind, string> = {
 }
 
 export function ChecksPanel() {
-  const project = useStore((s) => s.project)
+  // These are advisory readouts, not the editing surface, so they can lag a frame
+  // or two behind a drag. Without this, findIssues (quadratic in items) runs on
+  // every pointermove and competes with the gesture it is describing.
+  const project = useDeferredValue(useStore((s) => s.project))
   const select = useStore((s) => s.select)
 
-  // both are pure passes over the project; recompute only when it actually changes
+  // findIssues genuinely is about furniture, so it re-runs when items move — that's
+  // what the deferral above is for. The sun pass takes only the slices it reads, so
+  // Immer's structural sharing keeps it out of the drag path entirely.
   const issues = useMemo(() => findIssues(project), [project])
-  const sun = useMemo(() => roomSunExposure(project), [project])
-  const wallCount = project.walls.length
-  const structuralCount = useMemo(
-    () => project.walls.filter((w) => w.structural).length,
-    [project.walls],
+  const { walls, rooms, openings, orientationDeg } = project
+  const sun = useMemo(
+    () => roomSunExposure({ walls, rooms, openings, orientationDeg }),
+    [walls, rooms, openings, orientationDeg],
   )
+  const wallCount = walls.length
+  const structuralCount = useMemo(() => walls.filter((w) => w.structural).length, [walls])
 
   // an issue points at either an item or an opening
   const selectIssue = (iss: Issue) =>

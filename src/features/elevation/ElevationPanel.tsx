@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Download, PencilRuler, X } from 'lucide-react'
 import { useStore } from '../../store/store'
 import { Section } from '../../app/ui'
@@ -11,8 +11,12 @@ import {
 } from './elevationDraw'
 
 export function ElevationPanel() {
-  const project = useStore((s) => s.project)
+  // Deferred: run grouping is quadratic in carpentry items, and regrouping mid-drag
+  // makes the list flicker as pieces join and leave runs anyway.
+  const project = useDeferredValue(useStore((s) => s.project))
   const select = useStore((s) => s.select)
+  // No narrowing worth doing here: run grouping is about the furniture, so it has
+  // to re-run when items move. The deferral above is what keeps it off the drag.
   const runs = useMemo(() => elevationRuns(project), [project])
   const [openId, setOpenId] = useState<string | null>(null)
 
