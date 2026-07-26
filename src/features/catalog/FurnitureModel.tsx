@@ -58,6 +58,7 @@ export function FurnitureModel({ item }: { item: Item }) {
           counter={bool(item.params?.counter, false)}
           corner={bool(item.params?.corner, false)}
           legLen={num(item.params?.legLen, 1.0)}
+          drawers={num(item.params?.drawers, 0)}
           m={m}
         />
       )
@@ -76,7 +77,12 @@ export function FurnitureModel({ item }: { item: Item }) {
     case 'pendant':
       return <Pendant m={m} />
     case 'rug':
-      return (
+      return bool(item.params?.round, false) ? (
+        <mesh position={[0, 0.011, 0]} receiveShadow>
+          <cylinderGeometry args={[size.w / 2, size.w / 2, 0.02, 48]} />
+          <Mat material={m} repeat={[2, 2]} />
+        </mesh>
+      ) : (
         <mesh position={[0, 0.011, 0]} receiveShadow>
           <boxGeometry args={[size.w, 0.02, size.d]} />
           <Mat material={m} repeat={[2, 2]} />

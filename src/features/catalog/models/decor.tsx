@@ -114,7 +114,9 @@ export function Piano({ w, d, h, m }: { w: number; d: number; h: number; m: Mate
 
 
 export function Vase({ w, h, flowers = false, m }: { w: number; h: number; flowers?: boolean; m: Material }) {
-  const r = w / 2
+  // The body is a sphere sized from the width, so a short wide vessel (or one
+  // scaled down vertically) would otherwise sink through its own base.
+  const r = Math.min(w / 2, h * 0.45)
   return (
     <group>
       {/* body: bulged bottom + narrow neck */}

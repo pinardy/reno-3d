@@ -10,6 +10,7 @@ export function Cabinet({
   counter,
   corner = false,
   legLen = 1.0,
+  drawers = 0,
   m,
 }: {
   w: number
@@ -19,6 +20,8 @@ export function Cabinet({
   counter: boolean
   corner?: boolean
   legLen?: number
+  /** > 0 stacks horizontal drawer fronts instead of vertical doors. */
+  drawers?: number
   m: Material
 }) {
   const counterH = counter ? 0.04 : 0
@@ -29,6 +32,8 @@ export function Cabinet({
   const mainX0 = corner ? -w / 2 + d : -w / 2
   const mainDoorW = w / 2 - mainX0
   const nDoors = Math.max(1, Math.round(doors))
+  // drawers are only meaningful on a straight run; a corner unit keeps its doors
+  const nDrawers = corner ? 0 : Math.max(0, Math.round(drawers))
   const doorW = (mainDoorW - 0.04) / nDoors
   const doorMat = { ...m, roughness: Math.min(1, m.roughness) }
 
@@ -47,22 +52,40 @@ export function Cabinet({
         <boxGeometry args={[w, bodyH, d]} />
         <Mat material={m} />
       </mesh>
-      {/* main doors */}
-      {Array.from({ length: nDoors }).map((_, i) => {
-        const cx = mainX0 + 0.02 + doorW * (i + 0.5)
-        return (
-          <group key={i}>
-            <mesh position={[cx, bodyH / 2, d / 2 + 0.005]} castShadow>
-              <boxGeometry args={[doorW - 0.02, bodyH - 0.06, 0.02]} />
-              <SurfaceMaterial material={doorMat} />
-            </mesh>
-            <mesh position={[cx + doorW / 2 - 0.06, bodyH / 2, d / 2 + 0.02]} castShadow>
-              <boxGeometry args={[0.02, 0.12, 0.02]} />
-              <meshStandardMaterial color="#3a3a3d" metalness={0.7} roughness={0.3} />
-            </mesh>
-          </group>
-        )
-      })}
+      {/* drawer fronts: stacked across the full width, each with a bar pull */}
+      {nDrawers > 0
+        ? Array.from({ length: nDrawers }).map((_, i) => {
+            const frontH = (bodyH - 0.06) / nDrawers
+            const cy = 0.03 + frontH * (i + 0.5)
+            return (
+              <group key={i}>
+                <mesh position={[0, cy, d / 2 + 0.005]} castShadow>
+                  <boxGeometry args={[w - 0.04, frontH - 0.015, 0.02]} />
+                  <SurfaceMaterial material={doorMat} />
+                </mesh>
+                <mesh position={[0, cy, d / 2 + 0.02]} castShadow>
+                  <boxGeometry args={[Math.min(0.3, w * 0.45), 0.02, 0.02]} />
+                  <meshStandardMaterial color="#3a3a3d" metalness={0.7} roughness={0.3} />
+                </mesh>
+              </group>
+            )
+          })
+        : /* main doors */
+          Array.from({ length: nDoors }).map((_, i) => {
+            const cx = mainX0 + 0.02 + doorW * (i + 0.5)
+            return (
+              <group key={i}>
+                <mesh position={[cx, bodyH / 2, d / 2 + 0.005]} castShadow>
+                  <boxGeometry args={[doorW - 0.02, bodyH - 0.06, 0.02]} />
+                  <SurfaceMaterial material={doorMat} />
+                </mesh>
+                <mesh position={[cx + doorW / 2 - 0.06, bodyH / 2, d / 2 + 0.02]} castShadow>
+                  <boxGeometry args={[0.02, 0.12, 0.02]} />
+                  <meshStandardMaterial color="#3a3a3d" metalness={0.7} roughness={0.3} />
+                </mesh>
+              </group>
+            )
+          })}
       {counter && (
         <mesh position={[0, bodyH + counterH / 2, 0]} castShadow receiveShadow>
           <boxGeometry args={[w + 0.02, counterH, d + 0.02]} />

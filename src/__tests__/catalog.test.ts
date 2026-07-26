@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { CATALOG, catalogById, catalogPrice, newItemFromCatalog } from '../features/catalog/catalog'
+import {
+  CATALOG,
+  CATEGORIES,
+  catalogById,
+  catalogPrice,
+  newItemFromCatalog,
+} from '../features/catalog/catalog'
 
 // Kinds the 3D renderer (FurnitureModel) has a case for. If a new catalog kind
 // is added without a render case, this test fails.
@@ -32,6 +38,37 @@ describe('catalog', () => {
     expect(corner.kind).toBe('cabinet')
     expect(corner.params?.corner).toBe(true)
     expect(typeof corner.params?.legLen).toBe('number')
+  })
+  // Cabinets are the one kind whose renderer reads its dimensions from params
+  // rather than size, while collision and wall-snapping still use size. If the
+  // two disagree the model and its footprint quietly drift apart.
+  it('cabinet params match their declared size', () => {
+    for (const c of CATALOG.filter((e) => e.kind === 'cabinet')) {
+      const p = c.params ?? {}
+      if (typeof p.width === 'number') expect(p.width, c.id).toBeCloseTo(c.size.w)
+      if (typeof p.depth === 'number') expect(p.depth, c.id).toBeCloseTo(c.size.d)
+      if (typeof p.height === 'number') expect(p.height, c.id).toBeCloseTo(c.size.h)
+    }
+  })
+  it('drawer fronts are only asked for on cabinets', () => {
+    for (const c of CATALOG) {
+      if (c.params?.drawers !== undefined) {
+        expect(c.kind, c.id).toBe('cabinet')
+        expect(Number(c.params.drawers), c.id).toBeGreaterThan(0)
+      }
+    }
+  })
+  it('every entry sits in a listed category, and no category is empty', () => {
+    for (const c of CATALOG) expect(CATEGORIES, c.id).toContain(c.category)
+    for (const cat of CATEGORIES)
+      expect(CATALOG.some((c) => c.category === cat), cat).toBe(true)
+  })
+  it('lifted items are lifted by a sane amount', () => {
+    for (const c of CATALOG) {
+      if (c.baseY === undefined) continue
+      expect(c.baseY, c.id).toBeGreaterThanOrEqual(0)
+      expect(c.baseY, c.id).toBeLessThan(2.4) // below a standard ceiling
+    }
   })
   it('newItemFromCatalog copies material + position and lifts pendants', () => {
     const it = newItemFromCatalog(CATALOG[0], { x: 1, z: 2 })
