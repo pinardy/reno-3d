@@ -144,6 +144,10 @@ export function ItemsGroup({
   const onItemDown = useCallback(
     (e: ThreeEvent<PointerEvent>, item: Item) => {
       if (!enabled) return
+      // Only the primary button grabs furniture. pointerdown fires for every
+      // button, so without this a middle-drag starting over a sofa would pick the
+      // sofa up instead of panning past it.
+      if (e.nativeEvent.button !== 0) return
       // space-drag pans the camera, so let it through instead of grabbing the item
       if (isPanModifierHeld()) return
       e.stopPropagation()

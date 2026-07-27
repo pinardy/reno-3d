@@ -14,11 +14,14 @@ export function MeasureTool() {
   useEffect(() => {
     const el = gl.domElement
     const onDown = (e: PointerEvent) => {
+      // middle and right are camera controls, not measurement points
+      if (e.button !== 0) return
       downRef.current = { x: e.clientX, y: e.clientY }
     }
     const onUp = (e: PointerEvent) => {
       const d = downRef.current
       downRef.current = null
+      if (e.button !== 0) return
       if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 4) return // was a drag
       const rect = el.getBoundingClientRect()
       const ndc = new THREE.Vector2(

@@ -54,7 +54,8 @@ const SHORTCUTS: [string, string][] = [
   ['Shift-click', 'Multi-select furniture'],
   ['Delete', 'Remove selection · Esc to deselect'],
   ['Scroll / Space-drag', 'Zoom / pan the 2D view'],
-  ['Space-drag', 'Pan the 3D view (left-drag orbits)'],
+  ['Middle-drag', 'Pan the 3D view (also right-drag or space-drag)'],
+  ['Left-drag / scroll', 'Orbit / zoom the 3D view'],
   ['Shift-drag', 'Snap to grid · snaps rotation to 15°'],
 ]
 

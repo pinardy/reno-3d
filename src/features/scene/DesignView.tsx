@@ -259,7 +259,7 @@ export function DesignView() {
               : 'Measure: click two points on any surface to see the distance. Click again to start over.'
             : small
               ? 'Tap Furniture below to add · drag an item to move it · two fingers to pan and zoom.'
-              : 'Drag furniture from the left. Drag it on the floor to move · switch to Rotate to spin · Shift snaps to grid.'}
+              : 'Drag furniture from the left. Drag it on the floor to move · switch to Rotate to spin · Shift snaps to grid · middle-drag pans.'}
       </div>
 
       {!hasContent && (

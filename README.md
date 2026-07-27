@@ -110,7 +110,11 @@ gets built.
 `V` select · `S` scale · `W` wall · `D` door · `N` window · `R` room ·
 `Cmd/Ctrl+Z` undo · `Shift+Cmd/Ctrl+Z` redo · `Cmd/Ctrl+D` duplicate ·
 `Cmd/Ctrl+C` / `Cmd/Ctrl+V` copy / paste furniture · `Delete` remove selection ·
-`Esc` cancel / deselect · Space-drag or right-drag to pan · scroll to zoom.
+`Esc` cancel / deselect · scroll to zoom.
+
+**Camera (3D):** left-drag orbits · **middle-drag pans** · right-drag pans ·
+space-drag pans · scroll zooms. In the 2D plan, space-drag or right-drag pans and
+scroll zooms.
 
 Paste lands where the camera is looking, so you can copy a chair in one room,
 orbit to another and paste it there; repeated pastes step aside instead of piling

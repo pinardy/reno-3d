@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
 import { OrbitControls, Grid, ContactShadows } from '@react-three/drei'
@@ -62,6 +62,21 @@ export function SceneRoot({
   const homeRef = useRef<THREE.Group>(null)
   // third-party OrbitControls ref (typed `any` at this boundary only)
   const orbitRef = useRef<any>(null)
+
+  // Middle-drag pans, which is what every CAD and 3D tool does and what the wheel
+  // being a scroll wheel already implies — OrbitControls otherwise puts dolly on
+  // the middle button, duplicating the scroll it sits under. Right-drag keeps
+  // panning too. Built once per mount so the reference stays stable: this is the
+  // very object usePanModifier flips LEFT on, and a fresh literal each render
+  // would have drei reassign it and undo a space-hold mid-gesture.
+  const mouseButtons = useMemo(
+    () => ({
+      LEFT: THREE.MOUSE.ROTATE,
+      MIDDLE: THREE.MOUSE.PAN,
+      RIGHT: THREE.MOUSE.PAN,
+    }),
+    [],
+  )
 
   usePanModifier(orbitRef, cameraMode === 'orbit')
 
@@ -253,6 +268,7 @@ export function SceneRoot({
           minDistance={1}
           maxDistance={60}
           target={[4, 1, 3]}
+          mouseButtons={mouseButtons}
         />
       ) : (
         <WalkControls />
