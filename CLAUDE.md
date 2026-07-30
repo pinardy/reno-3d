@@ -26,6 +26,20 @@ CI (`.github/workflows/ci.yml`) runs typecheck → lint → test → build on ev
 and PR, so all four must pass. `VITE_BASE` overrides the GitHub Pages base path
 (`/reno-3d/`) if you need to serve from root.
 
+### Commit messages are linted
+
+A husky `commit-msg` hook runs commitlint against Conventional Commits, so a
+message like `added some stuff` is rejected at commit time. Use
+`feat|fix|docs|perf|refactor|test|build|ci|chore|style|revert: subject`, subject in
+lower case (an opening acronym like HDB is fine), no trailing full stop, and keep
+lines under 100 characters.
+
+The hook is installed by `npm install` via the `prepare` script — `.husky/_/` is
+generated and gitignored, so a fresh clone has no hooks until dependencies are
+installed. `git commit --no-verify` bypasses it, and `HUSKY=0` disables husky for a
+whole shell. Config lives in `commitlint.config.js`; the only rule overridden is
+`subject-case`, and the comment there explains why.
+
 ## Architecture
 
 ### One source of truth, in metres
